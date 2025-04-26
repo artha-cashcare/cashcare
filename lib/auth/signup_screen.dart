@@ -2,7 +2,7 @@ import 'package:cashcare/auth/login_screen.dart';
 import 'package:flutter/material.dart';
 
 class SignupPage extends StatefulWidget {
-  const SignupPage({super.key});
+  SignupPage({super.key});
 
   @override
   State<SignupPage> createState() => _SignupPageState();
@@ -31,10 +31,9 @@ class _SignupPageState extends State<SignupPage> {
       });
       _formKey.currentState!.save();
       print("Signup successful!");
-      // You can navigate or call your API here
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text("Please complete the form and accept the terms."),
         ),
       );
@@ -46,40 +45,39 @@ class _SignupPageState extends State<SignupPage> {
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: 10),
-              Image.asset('assets/images/logo.png', height: 130), // Your logo
-              const SizedBox(height: 10),
-              const Text(
+              SizedBox(height: 10),
+              Image.asset('assets/images/logo.png', height: 130),
+              SizedBox(height: 10),
+              Text(
                 "Welcome to CashCare",
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 10),
-              const Text(
+              SizedBox(height: 10),
+              Text(
                 "Stay on top of your income and expenses.",
                 style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
-              const SizedBox(height: 30),
+              SizedBox(height: 30),
               ElevatedButton.icon(
                 onPressed: () {
-                  // Google signup logic
                 },
                 icon: Image.asset('assets/images/google_logo.jpg', height: 24),
-                label: const Text("Sign up with Google"),
+                label: Text("Sign up with Google"),
                 style: ElevatedButton.styleFrom(
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   backgroundColor: Colors.white,
                   foregroundColor: Colors.black87,
-                  minimumSize: const Size(double.infinity, 50),
-                  side: const BorderSide(color: Colors.grey),
+                  minimumSize: Size(double.infinity, 50),
+                  side: BorderSide(color: Colors.grey),
                 ),
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: 20),
               Row(
-                children: const [
+                children: [
                   Expanded(child: Divider(thickness: 1)),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 10),
@@ -88,13 +86,13 @@ class _SignupPageState extends State<SignupPage> {
                   Expanded(child: Divider(thickness: 1)),
                 ],
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: 20),
               Form(
                 key: _formKey,
                 child: Column(
                   children: [
                     TextFormField(
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Full Name',
                         prefixIcon: Icon(Icons.person),
                         border: OutlineInputBorder(),
@@ -102,9 +100,9 @@ class _SignupPageState extends State<SignupPage> {
                       validator: (value) =>
                       value!.isEmpty ? 'Enter your name' : null,
                     ),
-                    const SizedBox(height: 15),
+                    SizedBox(height: 15),
                     TextFormField(
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Email',
                         prefixIcon: Icon(Icons.email),
                         border: OutlineInputBorder(),
@@ -117,9 +115,9 @@ class _SignupPageState extends State<SignupPage> {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 15),
+                    SizedBox(height: 15),
                     TextFormField(
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Phone',
                         prefixIcon: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -134,13 +132,13 @@ class _SignupPageState extends State<SignupPage> {
                       validator: (value) =>
                       value!.isEmpty ? 'Enter phone number' : null,
                     ),
-                    const SizedBox(height: 15),
+                    SizedBox(height: 15),
                     TextFormField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
                       decoration: InputDecoration(
                         labelText: 'Password',
-                        prefixIcon: const Icon(Icons.lock),
+                        prefixIcon: Icon(Icons.lock),
                         suffixIcon: IconButton(
                           icon: Icon(_obscurePassword
                               ? Icons.visibility_off
@@ -151,19 +149,19 @@ class _SignupPageState extends State<SignupPage> {
                             });
                           },
                         ),
-                        border: const OutlineInputBorder(),
+                        border: OutlineInputBorder(),
                       ),
                       validator: (value) => value!.length < 6
                           ? 'Password must be at least 6 characters'
                           : null,
                     ),
-                    const SizedBox(height: 15),
+                    SizedBox(height: 15),
                     TextFormField(
                       controller: _confirmPasswordController,
                       obscureText: _obscureConfirmPassword,
                       decoration: InputDecoration(
                         labelText: 'Confirm Password',
-                        prefixIcon: const Icon(Icons.lock),
+                        prefixIcon: Icon(Icons.lock),
                         suffixIcon: IconButton(
                           icon: Icon(_obscureConfirmPassword
                               ? Icons.visibility_off
@@ -175,19 +173,18 @@ class _SignupPageState extends State<SignupPage> {
                             });
                           },
                         ),
-                        border: const OutlineInputBorder(),
+                        border: OutlineInputBorder(),
                       ),
                       validator: (value) =>
                       value != _passwordController.text
                           ? 'Passwords do not match'
                           : null,
                     ),
-                    const SizedBox(height: 15),
+                    SizedBox(height: 15),
 
-                    /// Terms and Conditions with animated error
                     AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      duration: Duration(milliseconds: 300),
+                      padding: EdgeInsets.symmetric(horizontal: 8),
                       decoration: BoxDecoration(
                         color: _showTermsError
                             ? Colors.red.withOpacity(0.08)
@@ -205,7 +202,7 @@ class _SignupPageState extends State<SignupPage> {
                               });
                             },
                           ),
-                          const Expanded(
+                          Expanded(
                             child: Text(
                               'I accept the Terms and Conditions',
                               style: TextStyle(fontSize: 14),
@@ -216,9 +213,9 @@ class _SignupPageState extends State<SignupPage> {
                     ),
                     if (_showTermsError)
                       Padding(
-                        padding: const EdgeInsets.only(left: 12, top: 4),
+                        padding: EdgeInsets.only(left: 12, top: 4),
                         child: Row(
-                          children: const [
+                          children: [
                             Icon(Icons.error_outline,
                                 size: 16, color: Colors.red),
                             SizedBox(width: 4),
@@ -230,7 +227,7 @@ class _SignupPageState extends State<SignupPage> {
                           ],
                         ),
                       ),
-                    const SizedBox(height: 15),
+                    SizedBox(height: 15),
                     Container(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -259,11 +256,11 @@ class _SignupPageState extends State<SignupPage> {
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
+                  Text(
                     "Already have an account? ",
                     style: TextStyle(
                       color: Colors.black,
@@ -278,7 +275,7 @@ class _SignupPageState extends State<SignupPage> {
                         MaterialPageRoute(builder: (builder) => LoginPage()),
                       );
                     },
-                    child: const Text(
+                    child: Text(
                       'Sign In',
                       style: TextStyle(color: Colors.green),
                     ),
