@@ -23,8 +23,6 @@ class _SignupPageState extends State<SignupPage> {
   void _submit() {
     final isFormValid = _formKey.currentState!.validate();
 
-
-
     if (isFormValid && _termsAccepted) {
       setState(() {
         _showTermsError = !_termsAccepted;
@@ -63,12 +61,13 @@ class _SignupPageState extends State<SignupPage> {
               ),
               SizedBox(height: 30),
               ElevatedButton.icon(
-                onPressed: () {
-                },
+                onPressed: () {},
                 icon: Image.asset('assets/images/google_logo.jpg', height: 24),
                 label: Text("Sign up with Google"),
                 style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                   backgroundColor: Colors.white,
                   foregroundColor: Colors.black87,
                   minimumSize: Size(double.infinity, 50),
@@ -97,8 +96,8 @@ class _SignupPageState extends State<SignupPage> {
                         prefixIcon: Icon(Icons.person),
                         border: OutlineInputBorder(),
                       ),
-                      validator: (value) =>
-                      value!.isEmpty ? 'Enter your name' : null,
+                      validator:
+                          (value) => value!.isEmpty ? 'Enter your name' : null,
                     ),
                     SizedBox(height: 15),
                     TextFormField(
@@ -129,8 +128,9 @@ class _SignupPageState extends State<SignupPage> {
                         ),
                         border: OutlineInputBorder(),
                       ),
-                      validator: (value) =>
-                      value!.isEmpty ? 'Enter phone number' : null,
+                      validator:
+                          (value) =>
+                              value!.isEmpty ? 'Enter phone number' : null,
                     ),
                     SizedBox(height: 15),
                     TextFormField(
@@ -140,9 +140,11 @@ class _SignupPageState extends State<SignupPage> {
                         labelText: 'Password',
                         prefixIcon: Icon(Icons.lock),
                         suffixIcon: IconButton(
-                          icon: Icon(_obscurePassword
-                              ? Icons.visibility_off
-                              : Icons.visibility),
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                          ),
                           onPressed: () {
                             setState(() {
                               _obscurePassword = !_obscurePassword;
@@ -151,9 +153,11 @@ class _SignupPageState extends State<SignupPage> {
                         ),
                         border: OutlineInputBorder(),
                       ),
-                      validator: (value) => value!.length < 6
-                          ? 'Password must be at least 6 characters'
-                          : null,
+                      validator:
+                          (value) =>
+                              value!.length < 6
+                                  ? 'Password must be at least 6 characters'
+                                  : null,
                     ),
                     SizedBox(height: 15),
                     TextFormField(
@@ -163,22 +167,25 @@ class _SignupPageState extends State<SignupPage> {
                         labelText: 'Confirm Password',
                         prefixIcon: Icon(Icons.lock),
                         suffixIcon: IconButton(
-                          icon: Icon(_obscureConfirmPassword
-                              ? Icons.visibility_off
-                              : Icons.visibility),
+                          icon: Icon(
+                            _obscureConfirmPassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                          ),
                           onPressed: () {
                             setState(() {
                               _obscureConfirmPassword =
-                              !_obscureConfirmPassword;
+                                  !_obscureConfirmPassword;
                             });
                           },
                         ),
                         border: OutlineInputBorder(),
                       ),
-                      validator: (value) =>
-                      value != _passwordController.text
-                          ? 'Passwords do not match'
-                          : null,
+                      validator:
+                          (value) =>
+                              value != _passwordController.text
+                                  ? 'Passwords do not match'
+                                  : null,
                     ),
                     SizedBox(height: 15),
 
@@ -186,9 +193,10 @@ class _SignupPageState extends State<SignupPage> {
                       duration: Duration(milliseconds: 300),
                       padding: EdgeInsets.symmetric(horizontal: 8),
                       decoration: BoxDecoration(
-                        color: _showTermsError
-                            ? Colors.red.withOpacity(0.08)
-                            : Colors.transparent,
+                        color:
+                            _showTermsError
+                                ? Colors.red.withOpacity(0.08)
+                                : Colors.transparent,
                         borderRadius: BorderRadius.circular(5),
                       ),
                       child: Row(
@@ -216,13 +224,15 @@ class _SignupPageState extends State<SignupPage> {
                         padding: EdgeInsets.only(left: 12, top: 4),
                         child: Row(
                           children: [
-                            Icon(Icons.error_outline,
-                                size: 16, color: Colors.red),
+                            Icon(
+                              Icons.error_outline,
+                              size: 16,
+                              color: Colors.red,
+                            ),
                             SizedBox(width: 4),
                             Text(
                               'Please accept the terms to continue.',
-                              style:
-                              TextStyle(color: Colors.red, fontSize: 13),
+                              style: TextStyle(color: Colors.red, fontSize: 13),
                             ),
                           ],
                         ),
@@ -232,11 +242,14 @@ class _SignupPageState extends State<SignupPage> {
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {
-                        _submit();
+                          _submit();
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green,
-                          padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 50,
+                            vertical: 15,
+                          ),
                           textStyle: TextStyle(fontSize: 18),
                           minimumSize: Size(200, 50),
                           shape: RoundedRectangleBorder(
@@ -289,4 +302,3 @@ class _SignupPageState extends State<SignupPage> {
     );
   }
 }
-

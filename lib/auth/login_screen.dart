@@ -1,6 +1,7 @@
+import 'package:cashcare/auth/signup_screen.dart' show SignupPage;
 import 'package:flutter/material.dart';
 import 'package:flutter_iconly/flutter_iconly.dart';
-
+import 'forgot_password.dart';
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
 
@@ -11,6 +12,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   bool _obscureText = true;
   final TextEditingController _passwordController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -20,10 +22,7 @@ class _LoginPageState extends State<LoginPage> {
           padding: const EdgeInsets.all(24.0),
           child: Column(
             children: [
-              Image.asset(
-                'assets/images/logo.png',
-                height: 150,
-              ),
+              Image.asset('assets/images/logo.png', height: 150),
 
               const SizedBox(height: 20),
               const Text(
@@ -44,21 +43,14 @@ class _LoginPageState extends State<LoginPage> {
                   borderRadius: BorderRadius.circular(10),
                   child: Image.asset(
                     'assets/images/google_logo.jpg',
-                    fit:
-                        BoxFit
-                            .cover,
+                    fit: BoxFit.cover,
                   ),
                 ),
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Expanded(
-                    child: Divider(
-                      color: Colors.black,
-                      thickness: 1,
-                    ),
-                  ),
+                  Expanded(child: Divider(color: Colors.black, thickness: 1)),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8.0),
                     child: Text(
@@ -66,12 +58,7 @@ class _LoginPageState extends State<LoginPage> {
                       style: TextStyle(fontSize: 16),
                     ),
                   ),
-                  Expanded(
-                    child: Divider(
-                      color: Colors.black,
-                      thickness: 1,
-                    ),
-                  ),
+                  Expanded(child: Divider(color: Colors.black, thickness: 1)),
                 ],
               ),
 
@@ -95,11 +82,16 @@ class _LoginPageState extends State<LoginPage> {
                   filled: true,
                   fillColor: Colors.grey[200],
                   prefixIcon: Icon(IconlyBold.lock),
-                  suffixIcon: IconButton(onPressed: (){
-                    setState(() {
-                      _obscureText=!_obscureText;
-                    });
-                  }, icon: Icon(_obscureText?Icons.visibility_off:Icons.visibility))
+                  suffixIcon: IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _obscureText = !_obscureText;
+                      });
+                    },
+                    icon: Icon(
+                      _obscureText ? Icons.visibility_off : Icons.visibility,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
@@ -108,6 +100,7 @@ class _LoginPageState extends State<LoginPage> {
                 children: [
                   TextButton(
                     onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context)=>ForgotPasswordScreen()));
                     },
                     child: Text(
                       'Forgot  Password?',
@@ -160,6 +153,10 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   TextButton(
                     onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (builder) => SignupPage()),
+                      );
                     },
                     child: const Text(
                       'Sign Up',
