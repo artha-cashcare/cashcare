@@ -1,7 +1,10 @@
-import 'package:cashcare/auth/signup_screen.dart' show SignupPage;
+import 'package:cashcare/auth/forgot_password.dart';
+import 'package:cashcare/auth/signup_screen.dart';
+import 'package:cashcare/screens/home_screen.dart';
+import 'package:cashcare/services/auth_service.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_iconly/flutter_iconly.dart';
-import 'forgot_password.dart';
+
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
 
@@ -10,8 +13,67 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  bool _obscureText = true;
-  final TextEditingController _passwordController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _authService = AuthService();
+  bool _obscurePassword = true;
+  bool _isLoading = false;
+
+  // Submit Function
+  Future<void> _submit() async {
+    // Ensure the form is valid
+    if (!_formKey.currentState!.validate()) return;
+
+    // Set loading state
+    setState(() => _isLoading = true);
+
+    try {
+      // Call the login API service
+      await _authService.login(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+      if (!mounted) return;
+
+      // Navigate to the home screen if login is successful
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      // Handle error based on the exception
+      String errorMessage = 'Login failed';
+
+      if (e.toString().contains('Invalid email or password')) {
+        errorMessage = 'Invalid email or password. Please try again.';
+      } else if (e.toString().contains('Network error')) {
+        errorMessage = 'Network error. Please check your internet connection.';
+      } else {
+        errorMessage = e.toString().replaceFirst('Exception: ', '');
+      }
+
+      // Show an error message using SnackBar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMessage),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    } finally {
+      // Reset loading state
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,44 +125,65 @@ class _LoginPageState extends State<LoginPage> {
               ),
 
               SizedBox(height: 15),
-              TextField(
-                decoration: InputDecoration(
-                  prefixIcon: Icon(Icons.email),
-                  labelText: 'Email or Phone',
-                  border: OutlineInputBorder(),
-                  filled: true,
-                  fillColor: Colors.grey[200],
-                ),
-              ),
-              const SizedBox(height: 20),
-              TextFormField(
-                obscureText: _obscureText,
-                controller: _passwordController,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  border: OutlineInputBorder(),
-                  filled: true,
-                  fillColor: Colors.grey[200],
-                  prefixIcon: Icon(IconlyBold.lock),
-                  suffixIcon: IconButton(
-                    onPressed: () {
-                      setState(() {
-                        _obscureText = !_obscureText;
-                      });
-                    },
-                    icon: Icon(
-                      _obscureText ? Icons.visibility_off : Icons.visibility,
+              Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: _emailController,
+                      decoration: InputDecoration(
+                        prefixIcon: Icon(Icons.email),
+                        labelText: 'Email or Phone',
+                        border: OutlineInputBorder(),
+                        filled: true,
+                        fillColor: Colors.grey[200],
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your email or phone number';
+                        }
+                        return null;
+                      },
                     ),
-                  ),
+                    const SizedBox(height: 20),
+                    TextFormField(
+                      obscureText: _obscurePassword,
+                      controller: _passwordController,
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        border: OutlineInputBorder(),
+                        filled: true,
+                        fillColor: Colors.grey[200],
+                        prefixIcon: Icon(Icons.lock),
+                        suffixIcon: IconButton(
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
+                          icon: Icon(
+                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                          ),
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your password';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
                 ),
               ),
+
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
                     onPressed: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context)=>ForgotPasswordScreen()));
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => ForgotPasswordScreen()));
                     },
                     child: Text(
                       'Forgot  Password?',
@@ -113,12 +196,7 @@ class _LoginPageState extends State<LoginPage> {
               Container(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => LoginPage()),
-                    );
-                  },
+                  onPressed: _isLoading ? null : _submit, // Only call _submit if not loading
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
                     padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
@@ -128,7 +206,9 @@ class _LoginPageState extends State<LoginPage> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: Text(
+                  child: _isLoading
+                      ? CupertinoActivityIndicator() // Show progress indicator while loading
+                      : Text(
                     'Sign In',
                     style: TextStyle(
                       color: Colors.white,

@@ -1,4 +1,5 @@
 import 'package:cashcare/auth/login_screen.dart';
+import 'package:cashcare/auth/signup_screen.dart';
 import 'package:flutter/material.dart';
 
 class SplashScreen extends StatelessWidget {
@@ -58,7 +59,7 @@ class SplashScreen extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => LoginPage()),
+                    MaterialPageRoute(builder: (context) => SignupPage()),
                   );
                 },
                 style: ElevatedButton.styleFrom(

@@ -1,8 +1,9 @@
 import 'package:cashcare/auth/login_screen.dart';
+import 'package:cashcare/services/auth_service.dart';
 import 'package:flutter/material.dart';
 
 class SignupPage extends StatefulWidget {
-  SignupPage({super.key});
+  const SignupPage({super.key});
 
   @override
   State<SignupPage> createState() => _SignupPageState();
@@ -10,73 +11,121 @@ class SignupPage extends StatefulWidget {
 
 class _SignupPageState extends State<SignupPage> {
   final _formKey = GlobalKey<FormState>();
-
   bool _termsAccepted = false;
   bool _showTermsError = false;
-
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
 
-  void _submit() {
+  final AuthService authService = AuthService();
+
+  bool isLoading = false;
+  void _submit() async {
     final isFormValid = _formKey.currentState!.validate();
 
     if (isFormValid && _termsAccepted) {
       setState(() {
-        _showTermsError = !_termsAccepted;
+        _showTermsError = false;
+        isLoading = true;
       });
-      _formKey.currentState!.save();
-      print("Signup successful!");
+
+      try {
+        await authService.register(
+          email: emailController.text,
+          password: passwordController.text,
+          firstName: nameController.text.split(" ")[0],
+          lastName: nameController.text.split(" ").last,
+          phoneNumber: phoneController.text,
+        );
+
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginPage()),
+        );
+      } catch (e) {
+        if (!mounted) return;
+        String errorMessage = 'Registration failed';
+
+        // Extract the actual error message from the exception
+        if (e.toString().contains('custom user with this email already exists.')) {
+          errorMessage = 'This email is already registered.';
+        } else if (e.toString().contains('Network error')) {
+          errorMessage = 'Network error. Please check your internet connection.';
+        } else {
+          errorMessage = e.toString().replaceFirst('Exception: ', '');
+        }
+print(errorMessage);
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Registration Error'),
+            content: Text(errorMessage),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      } finally {
+        if (mounted) setState(() => isLoading = false);
+      }
     } else {
+      setState(() => _showTermsError = !_termsAccepted);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Please complete the form and accept the terms."),
+        const SnackBar(
+          content: Text("Please complete all fields and accept the terms."),
+          duration: Duration(seconds: 2),
         ),
       );
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.all(20),
+          padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               Image.asset('assets/images/logo.png', height: 130),
-              SizedBox(height: 10),
-              Text(
+              const SizedBox(height: 10),
+              const Text(
                 "Welcome to CashCare",
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: 10),
-              Text(
+              const SizedBox(height: 10),
+              const Text(
                 "Stay on top of your income and expenses.",
                 style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
-              SizedBox(height: 30),
+              const SizedBox(height: 30),
               ElevatedButton.icon(
                 onPressed: () {},
                 icon: Image.asset('assets/images/google_logo.jpg', height: 24),
-                label: Text("Sign up with Google"),
+                label: const Text("Sign up with Google"),
                 style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   backgroundColor: Colors.white,
                   foregroundColor: Colors.black87,
-                  minimumSize: Size(double.infinity, 50),
-                  side: BorderSide(color: Colors.grey),
+                  minimumSize: const Size(double.infinity, 50),
+                  side: const BorderSide(color: Colors.grey),
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Row(
-                children: [
+                children: const [
                   Expanded(child: Divider(thickness: 1)),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 10),
@@ -85,23 +134,24 @@ class _SignupPageState extends State<SignupPage> {
                   Expanded(child: Divider(thickness: 1)),
                 ],
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Form(
                 key: _formKey,
                 child: Column(
                   children: [
                     TextFormField(
-                      decoration: InputDecoration(
+                      controller: nameController,
+                      decoration: const InputDecoration(
                         labelText: 'Full Name',
                         prefixIcon: Icon(Icons.person),
                         border: OutlineInputBorder(),
                       ),
-                      validator:
-                          (value) => value!.isEmpty ? 'Enter your name' : null,
+                      validator: (value) => value!.isEmpty ? 'Enter your name' : null,
                     ),
-                    SizedBox(height: 15),
+                    const SizedBox(height: 15),
                     TextFormField(
-                      decoration: InputDecoration(
+                      controller: emailController,
+                      decoration: const InputDecoration(
                         labelText: 'Email',
                         prefixIcon: Icon(Icons.email),
                         border: OutlineInputBorder(),
@@ -114,36 +164,26 @@ class _SignupPageState extends State<SignupPage> {
                         return null;
                       },
                     ),
-                    SizedBox(height: 15),
+                    const SizedBox(height: 15),
                     TextFormField(
-                      decoration: InputDecoration(
+                      controller: phoneController,
+                      decoration: const InputDecoration(
                         labelText: 'Phone',
-                        prefixIcon: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SizedBox(width: 10),
-                            Text('+977 🇳🇵'),
-                            SizedBox(width: 10),
-                          ],
-                        ),
+                        prefixIcon: Icon(Icons.phone),
                         border: OutlineInputBorder(),
                       ),
-                      validator:
-                          (value) =>
-                              value!.isEmpty ? 'Enter phone number' : null,
+                      validator: (value) => value!.isEmpty ? 'Enter phone number' : null,
                     ),
-                    SizedBox(height: 15),
+                    const SizedBox(height: 15),
                     TextFormField(
-                      controller: _passwordController,
+                      controller: passwordController,
                       obscureText: _obscurePassword,
                       decoration: InputDecoration(
                         labelText: 'Password',
-                        prefixIcon: Icon(Icons.lock),
+                        prefixIcon: const Icon(Icons.lock),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_off
-                                : Icons.visibility,
+                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
                           ),
                           onPressed: () {
                             setState(() {
@@ -151,54 +191,40 @@ class _SignupPageState extends State<SignupPage> {
                             });
                           },
                         ),
-                        border: OutlineInputBorder(),
+                        border: const OutlineInputBorder(),
                       ),
-                      validator:
-                          (value) =>
-                              value!.length < 6
-                                  ? 'Password must be at least 6 characters'
-                                  : null,
+                      validator: (value) => value!.length < 6 ? 'Password must be at least 6 characters' : null,
                     ),
-                    SizedBox(height: 15),
+                    const SizedBox(height: 15),
                     TextFormField(
-                      controller: _confirmPasswordController,
+                      controller: confirmPasswordController,
                       obscureText: _obscureConfirmPassword,
                       decoration: InputDecoration(
                         labelText: 'Confirm Password',
-                        prefixIcon: Icon(Icons.lock),
+                        prefixIcon: const Icon(Icons.lock),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _obscureConfirmPassword
-                                ? Icons.visibility_off
-                                : Icons.visibility,
+                            _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
                           ),
                           onPressed: () {
                             setState(() {
-                              _obscureConfirmPassword =
-                                  !_obscureConfirmPassword;
+                              _obscureConfirmPassword = !_obscureConfirmPassword;
                             });
                           },
                         ),
-                        border: OutlineInputBorder(),
+                        border: const OutlineInputBorder(),
                       ),
-                      validator:
-                          (value) =>
-                              value != _passwordController.text
-                                  ? 'Passwords do not match'
-                                  : null,
+                      validator: (value) => value != passwordController.text ? 'Passwords do not match' : null,
                     ),
-                    SizedBox(height: 15),
-
+                    const SizedBox(height: 15),
                     AnimatedContainer(
-                      duration: Duration(milliseconds: 300),
-                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      duration: const Duration(milliseconds: 300),
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
                       decoration: BoxDecoration(
-                        color:
-                            _showTermsError
-                                ? Colors.red.withOpacity(0.08)
-                                : Colors.transparent,
+                        color: _showTermsError ? Colors.red.withOpacity(0.08) : Colors.transparent,
                         borderRadius: BorderRadius.circular(5),
                       ),
+
                       child: Row(
                         children: [
                           Checkbox(
@@ -210,7 +236,7 @@ class _SignupPageState extends State<SignupPage> {
                               });
                             },
                           ),
-                          Expanded(
+                          const Expanded(
                             child: Text(
                               'I accept the Terms and Conditions',
                               style: TextStyle(fontSize: 14),
@@ -221,14 +247,10 @@ class _SignupPageState extends State<SignupPage> {
                     ),
                     if (_showTermsError)
                       Padding(
-                        padding: EdgeInsets.only(left: 12, top: 4),
+                        padding: const EdgeInsets.only(left: 12, top: 4),
                         child: Row(
-                          children: [
-                            Icon(
-                              Icons.error_outline,
-                              size: 16,
-                              color: Colors.red,
-                            ),
+                          children: const [
+                            Icon(Icons.error_outline, size: 16, color: Colors.red),
                             SizedBox(width: 4),
                             Text(
                               'Please accept the terms to continue.',
@@ -237,27 +259,24 @@ class _SignupPageState extends State<SignupPage> {
                           ],
                         ),
                       ),
-                    SizedBox(height: 15),
+                    const SizedBox(height: 15),
                     Container(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () {
-                          _submit();
-                        },
+                        onPressed: isLoading ? null : _submit,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green,
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 50,
-                            vertical: 15,
-                          ),
-                          textStyle: TextStyle(fontSize: 18),
-                          minimumSize: Size(200, 50),
+                          padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                          textStyle: const TextStyle(fontSize: 18),
+                          minimumSize: const Size(200, 50),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        child: Text(
-                          'Sign In',
+                        child: isLoading
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : const Text(
+                          'Sign Up',
                           style: TextStyle(
                             color: Colors.white,
                             fontFamily: 'Poppins',
@@ -269,11 +288,11 @@ class _SignupPageState extends State<SignupPage> {
                   ],
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
+                  const Text(
                     "Already have an account? ",
                     style: TextStyle(
                       color: Colors.black,
@@ -285,13 +304,10 @@ class _SignupPageState extends State<SignupPage> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (builder) => LoginPage()),
+                        MaterialPageRoute(builder: (context) => const LoginPage()),
                       );
                     },
-                    child: Text(
-                      'Sign In',
-                      style: TextStyle(color: Colors.green),
-                    ),
+                    child: const Text('Sign In', style: TextStyle(color: Colors.green)),
                   ),
                 ],
               ),
