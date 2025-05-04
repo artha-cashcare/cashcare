@@ -5,7 +5,10 @@ import 'package:http/http.dart' as http;
 
 class AuthService {
   final _storage = const FlutterSecureStorage();
-  final String baseUrl = 'http://10.0.2.2:8000/api/auth';
+  // final String baseUrl = 'http://10.0.2.2:8000/api/auth';
+  final String baseUrl = 'http://192.168.1.70:8000/api/auth';
+  // static const String _baseUrl = 'http://10.0.2.2:8000/api';
+  static const String _baseUrls = 'http://192.168.1.70:8000/api';
 
   // Improved register method
 // Change the return type to Future<http.Response>
@@ -39,6 +42,7 @@ class AuthService {
     } on http.ClientException {
       throw Exception('Network error. Please check your connection');
     } catch (e) {
+      print(e);
       rethrow;
     }
   }
@@ -142,5 +146,34 @@ class AuthService {
 
   Future<String?> getUsername() async {
     return await _storage.read(key: 'user_name');
+  }
+
+  static Future<String?> sendPasswordResetEmail(String email) async {
+    final url = Uri.parse('$_baseUrls/password_reset/');
+    print('🔄 Attempting to send password reset to: $email'); // Debug 1
+    print('🌐 API Endpoint: $url'); // Debug 2
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email}),
+      );
+
+      print('📡 Response status: ${response.statusCode}'); // Debug 3
+      print('📦 Response body: ${response.body}'); // Debug 4
+
+      if (response.statusCode == 200) {
+        print('✅ Password reset email sent successfully'); // Debug 5
+        return null;
+      } else {
+        final data = jsonDecode(response.body);
+        print('⚠️ Server error: ${data['error']}'); // Debug 6
+        return data['error'] ?? 'Something went wrong. Try again.';
+      }
+    } catch (e) {
+      print('🔥 Exception caught: $e'); // Debug 7
+      return 'Network error: $e';
+    }
   }
 }
