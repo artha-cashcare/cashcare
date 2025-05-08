@@ -6,6 +6,9 @@ plugins {
 }
 
 android {
+    lint {
+        disable.add("UncheckedWarning")
+    }
     namespace = "com.example.cashcare"
     compileSdk = flutter.compileSdkVersion
 //    ndkVersion = flutter.ndkVersion
@@ -31,10 +34,14 @@ android {
     }
 
     buildTypes {
-        release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+        getByName("release") {
             signingConfig = signingConfigs.getByName("debug")
+            isShrinkResources = false
+            isMinifyEnabled = false
+            isCrunchPngs = false
+
+            // For release signing (when ready):
+            // signingConfig = signingConfigs.getByName("release")
         }
     }
     ndkVersion = "27.0.12077973"

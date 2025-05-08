@@ -1,7 +1,12 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:cashcare/auth/forgot_password.dart';
 import 'package:cashcare/auth/signup_screen.dart';
+import 'package:cashcare/screens/bottom_navs.dart';
 import 'package:cashcare/screens/home_screen.dart';
 import 'package:cashcare/services/auth_service.dart';
+import 'package:cashcare/utils/snackbar_service.dart' show SnackBarService;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -22,52 +27,84 @@ class _LoginPageState extends State<LoginPage> {
 
   // Submit Function
   Future<void> _submit() async {
-    // Ensure the form is valid
     if (!_formKey.currentState!.validate()) return;
 
-    // Set loading state
     setState(() => _isLoading = true);
 
     try {
-      // Call the login API service
+      // Check internet connection
+      if (!await _hasInternetConnection()) {
+        if (!mounted) return;
+        SnackBarService.showCustomSnackBar(
+          context: context,
+          message: 'No internet connection',
+          icon: const Icon(Icons.wifi_off, color: Colors.white, size: 24),
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+        );
+        return;
+      }
+
+      // Attempt login with timeout
       await _authService.login(
         email: _emailController.text,
         password: _passwordController.text,
-      );
+      ).timeout(const Duration(seconds: 10));
+
       if (!mounted) return;
 
-      // Navigate to the home screen if login is successful
+      // Success
+      SnackBarService.showCustomSnackBar(
+        context: context,
+        message: 'Login successful!',
+        icon: const Icon(Icons.check_circle_outline, color: Colors.white, size: 24),
+        backgroundColor: Colors.green,
+        textColor: Colors.white,
+      );
+
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        MaterialPageRoute(builder: (_) => BottomNavbar()),
+      );
+    } on TimeoutException {
+      if (!mounted) return;
+      SnackBarService.showCustomSnackBar(
+        context: context,
+        message: 'Server is not responding. Please try again later.',
+        icon: const Icon(Icons.timer_off, color: Colors.white, size: 24),
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
       );
     } catch (e) {
       if (!mounted) return;
 
-      // Handle error based on the exception
       String errorMessage = 'Login failed';
-
       if (e.toString().contains('Invalid email or password')) {
-        errorMessage = 'Invalid email or password. Please try again.';
+        errorMessage = 'Invalid email or password';
       } else if (e.toString().contains('Network error')) {
-        errorMessage = 'Network error. Please check your internet connection.';
-      } else {
-        errorMessage = e.toString().replaceFirst('Exception: ', '');
+        errorMessage = 'Network error. Please check your connection';
       }
 
-      // Show an error message using SnackBar
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(errorMessage),
-          duration: const Duration(seconds: 3),
-        ),
+      SnackBarService.showCustomSnackBar(
+        context: context,
+        message: errorMessage,
+        icon: const Icon(Icons.error_outline, color: Colors.white, size: 24),
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
       );
     } finally {
-      // Reset loading state
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
+  Future<bool> _hasInternetConnection() async {
+    try {
+      final result = await InternetAddress.lookup('example.com');
+      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+    } on SocketException {
+      return false;
+    }
+  }
   @override
   void dispose() {
     _emailController.dispose();
@@ -162,7 +199,9 @@ class _LoginPageState extends State<LoginPage> {
                             });
                           },
                           icon: Icon(
-                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                            _obscurePassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
                           ),
                         ),
                       ),
@@ -183,7 +222,12 @@ class _LoginPageState extends State<LoginPage> {
                 children: [
                   TextButton(
                     onPressed: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => ForgotPasswordScreen()));
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ForgotPasswordScreen(),
+                        ),
+                      );
                     },
                     child: Text(
                       'Forgot  Password?',
@@ -196,6 +240,13 @@ class _LoginPageState extends State<LoginPage> {
               Container(
                 width: double.infinity,
                 child: ElevatedButton(
+                  // onPressed: () {
+                  //   Navigator.pushReplacement(
+                  //     context,
+                  //     MaterialPageRoute(builder: (context) => BottomNavbar()),
+                  //   );
+                  // },
+
                   onPressed: _isLoading ? null : _submit, // Only call _submit if not loading
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
@@ -206,16 +257,17 @@ class _LoginPageState extends State<LoginPage> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: _isLoading
-                      ? CupertinoActivityIndicator() // Show progress indicator while loading
-                      : Text(
-                    'Sign In',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  child:
+                      _isLoading
+                          ? CupertinoActivityIndicator() // Show progress indicator while loading
+                          : Text(
+                            'Sign In',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                 ),
               ),
 

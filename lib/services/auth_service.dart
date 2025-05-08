@@ -1,3 +1,4 @@
+import 'dart:async' show TimeoutException;
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -7,12 +8,11 @@ class AuthService {
   final _storage = const FlutterSecureStorage();
   // final String baseUrl = 'http://10.0.2.2:8000/api/auth';
   final String baseUrl = 'http://192.168.1.70:8000/api/auth';
-  // static const String _baseUrl = 'http://10.0.2.2:8000/api';
+
+  // static const String _baseUrls = 'http://10.0.2.2:8000/api';
   static const String _baseUrls = 'http://192.168.1.70:8000/api';
 
-  // Improved register method
-// Change the return type to Future<http.Response>
-  // Enhanced login with better error handling
+
   Future<void> login({
     required String email,
     required String password,
@@ -47,7 +47,6 @@ class AuthService {
     }
   }
 
-// Improved register method with better error handling
   Future<void> register({
     required String email,
     required String password,
@@ -66,7 +65,7 @@ class AuthService {
           'phone_number': phoneNumber,
         }),
         headers: {'Content-Type': 'application/json'},
-      );
+      ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode != 201) {
         final errorData = json.decode(response.body);
@@ -78,6 +77,8 @@ class AuthService {
       }
     } on http.ClientException {
       throw Exception('Network error. Please check your connection');
+    } on TimeoutException {
+      throw Exception('Server is not responding. Please try again later.');
     } catch (e) {
       rethrow;
     }
@@ -95,7 +96,6 @@ class AuthService {
     }
   }
 
-  // Token refresh logic
   Future<void> refreshToken() async {
     try {
       final refreshToken = await _storage.read(key: 'refresh_token');
@@ -120,23 +120,23 @@ class AuthService {
     }
   }
 
-  // Secure logout
   Future<void> logout() async {
     try {
-      // Optional: Call your backend logout endpoint if needed
       await _storage.deleteAll();
     } catch (e) {
-      // Even if logout fails, clear local storage
       await _storage.deleteAll();
     }
   }
 
-  // Get auth headers with auto-refresh
   Future<Map<String, String>> getAuthHeaders() async {
     String? accessToken = await _storage.read(key: 'access_token');
 
-    // If no token, return empty headers
     if (accessToken == null) return {};
+
+    if (_isTokenExpired(accessToken)) {
+      await refreshToken();
+      accessToken = await _storage.read(key: 'access_token');
+    }
 
     return {
       'Content-Type': 'application/json',
@@ -148,11 +148,24 @@ class AuthService {
     return await _storage.read(key: 'user_name');
   }
 
+  bool _isTokenExpired(String token) {
+    try {
+      final payload = token.split('.')[1];
+      final decodedPayload = utf8.decode(base64Url.decode(base64Url.normalize(payload)));
+      final Map<String, dynamic> payloadMap = json.decode(decodedPayload);
+
+      final exp = payloadMap['exp'];
+      if (exp == null) return false;
+
+      final expiryDate = DateTime.fromMillisecondsSinceEpoch(exp * 1000);
+      return DateTime.now().isAfter(expiryDate);
+    } catch (e) {
+      return true;
+    }
+  }
+
   static Future<String?> sendPasswordResetEmail(String email) async {
     final url = Uri.parse('$_baseUrls/password_reset/');
-    print('🔄 Attempting to send password reset to: $email'); // Debug 1
-    print('🌐 API Endpoint: $url'); // Debug 2
-
     try {
       final response = await http.post(
         url,
@@ -160,19 +173,13 @@ class AuthService {
         body: jsonEncode({'email': email}),
       );
 
-      print('📡 Response status: ${response.statusCode}'); // Debug 3
-      print('📦 Response body: ${response.body}'); // Debug 4
-
       if (response.statusCode == 200) {
-        print('✅ Password reset email sent successfully'); // Debug 5
         return null;
       } else {
         final data = jsonDecode(response.body);
-        print('⚠️ Server error: ${data['error']}'); // Debug 6
         return data['error'] ?? 'Something went wrong. Try again.';
       }
     } catch (e) {
-      print('🔥 Exception caught: $e'); // Debug 7
       return 'Network error: $e';
     }
   }

@@ -1,46 +1,35 @@
 import 'dart:ui';
-// import 'package:cashcare/screens/receipt_scan.dart';
+
+import 'package:cashcare/models/navbar_provider.dart';
+import 'package:cashcare/screens/profile.dart' show ProfileScreen;
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter_iconly/flutter_iconly.dart';
-import 'home_screen.dart';
-import 'profile.dart';
-import 'receipt_scan.dart';
+import '../screens/home_screen.dart';
 
-class BottomNavbar extends StatefulWidget {
-  @override
-  _BottomNavbarState createState() => _BottomNavbarState();
-}
 
-class _BottomNavbarState extends State<BottomNavbar> {
-  int _selectedIndex = 0;
-
+class BottomNavbar extends StatelessWidget {
   final List<Widget> _pages = [
     HomeScreen(), // 0
-    Container(child: Center(child: Text('Goals screen'))), // 1 (Chart)
-    // Container(),            // 2 (Scanner page  for center button)
-    Container(child: Center(child: Text('History screen'))), // 3 (History)
-    ProfileScreen(), // 4
+    Container(child: Center(child: Text('Goals screen'))), // 1
+    Container(child: Center(child: Text('History screen'))), // 2
+    ProfileScreen(), // 3
   ];
-
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
+    final navProvider = Provider.of<BottomNavProvider>(context);
+
     return Scaffold(
       extendBody: true,
-      body: _pages[_selectedIndex],
-      floatingActionButton: _buildCenterButton(),
+      body: _pages[navProvider.currentIndex],
+      floatingActionButton: _buildCenterButton(context),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: _buildBottomAppBar(),
+      bottomNavigationBar: _buildBottomAppBar(context),
     );
   }
 
-  Widget _buildCenterButton() {
+  Widget _buildCenterButton(BuildContext context) {
     return Container(
       height: 50,
       width: 50,
@@ -63,17 +52,17 @@ class _BottomNavbarState extends State<BottomNavbar> {
         color: Color(0xFF4CAF50),
         onPressed: () {
           Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => Container(child: Center(child: Text('Scanning page'),),)),
-          );
-          _onItemTapped(0); // Switch to sca
-          // nner page
+              context,
+              MaterialPageRoute(builder: (context) => Container(child: Center(child: Text('Scanning page'))),
+          ));
         },
       ),
     );
   }
 
-  Widget _buildBottomAppBar() {
+  Widget _buildBottomAppBar(BuildContext context) {
+    final navProvider = Provider.of<BottomNavProvider>(context);
+
     return Container(
       height: 60,
       child: Stack(
@@ -93,11 +82,11 @@ class _BottomNavbarState extends State<BottomNavbar> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildNavItem(IconlyBold.home, 0),
-                      _buildNavItem(IconlyBold.chart, 1),
+                      _buildNavItem(IconlyBold.home, 0, context),
+                      _buildNavItem(IconlyBold.chart, 1, context),
                       SizedBox(width: 20), // Space for center button
-                      _buildNavItem(Icons.history, 2),
-                      _buildNavItem(Icons.person, 3),
+                      _buildNavItem(Icons.history, 2, context),
+                      _buildNavItem(Icons.person, 3, context),
                     ],
                   ),
                 ),
@@ -109,10 +98,12 @@ class _BottomNavbarState extends State<BottomNavbar> {
     );
   }
 
-  Widget _buildNavItem(IconData icon, int index) {
-    final isSelected = _selectedIndex == index;
+  Widget _buildNavItem(IconData icon, int index, BuildContext context) {
+    final navProvider = Provider.of<BottomNavProvider>(context);
+    final isSelected = navProvider.currentIndex == index;
+
     return InkWell(
-      onTap: () => _onItemTapped(index),
+      onTap: () => navProvider.changeIndex(index),
       child: SizedBox(
         width: 40,
         height: 40,

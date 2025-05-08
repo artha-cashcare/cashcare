@@ -1,4 +1,7 @@
 import 'package:cashcare/auth/login_screen.dart';
+import 'package:cashcare/screens/add_expense.dart';
+import 'package:cashcare/screens/add_income.dart';
+import 'package:cashcare/screens/receipt_scan.dart';
 import 'package:cashcare/services/auth_service.dart';
 import 'package:cashcare/widgets/home_button_container.dart';
 import 'package:cashcare/widgets/row_widget.dart';
@@ -35,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => LoginPage()),
-        (route) => false,
+            (route) => false,
       );
     } catch (e) {
       if (!mounted) return;
@@ -47,9 +50,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        // leadingWidth: 60, // Ensure avatar doesn't shift too far in
         leading: Container(
           margin: const EdgeInsets.all(8),
           decoration: BoxDecoration(
@@ -65,14 +69,11 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ),
-        title: Transform.translate(
-          offset: Offset(-15, 0),
-          child: Text(
-            userName,
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontWeight: FontWeight.w600,
-            ),
+        title: Text(
+          'Hi, $userName',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
           ),
         ),
         actions: [
@@ -85,73 +86,87 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(height: 30),
+          // Balance Card
           Padding(
-            padding: const EdgeInsets.fromLTRB(11, 0, 0, 0),
-            child: Text(
-              'Current Balance',
-              style: TextStyle(
-                fontSize: 20,
-                fontFamily: 'Poppins',
-                fontWeight: FontWeight.w600,
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+            child: Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              color: theme.cardColor,
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Current Balance',
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Text(
+                          'NPR ',
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: theme.primaryColor,
+                          ),
+                        ),
+                        Text(
+                          isAmountVisible ? '3,590.00' : '••••••',
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const Spacer(),
+                        IconButton(
+                          onPressed: () => setState(() => isAmountVisible = !isAmountVisible),
+                          icon: Icon(
+                            isAmountVisible ? Icons.visibility : Icons.visibility_off,
+                            color: theme.primaryColor,
+                          ),
+                          splashRadius: 20,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    // Income/Expense Summary
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildSummaryItem(
+                            context,
+                            title: 'Income',
+                            amount: '4,500.00',
+                            icon: Icons.arrow_upward,
+                            color: Colors.green,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildSummaryItem(
+                            context,
+                            title: 'Expense',
+                            amount: '910.00',
+                            icon: Icons.arrow_downward,
+                            color: Colors.red,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-          SizedBox(height: 0),
-
-          Padding(
-            padding: const EdgeInsets.fromLTRB(11, 0, 0, 0),
-            child: Row(
-              children: [
-                Text(
-                  'NPR ',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Transform.translate(
-                  offset: Offset(0, -1),
-                  child: Text(
-                    isAmountVisible?'3,590.00':'******',
-                    style: TextStyle(
-                      fontSize: 21,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                SizedBox(width: 7),
-                Transform.translate(
-                  offset: Offset(-16, -3),
-                  child: IconButton(
-                    onPressed: () {
-                      setState(() {
-                        isAmountVisible = !isAmountVisible;
-                      });
-                    },
-                    icon: Icon(
-                      isAmountVisible ? Icons.visibility : Icons.visibility_off,
-                      size: 19,
-                      color: Colors.green,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 5),
-          RowWidget(title: 'Total Income', amount: 'NPR 4,500.00',isamtvisible: isAmountVisible,),
-          RowWidget(
-            title: 'Total Expence',
-            amount: 'NPR 4,500.00',
-            amountColor: Colors.red,
-            isamtvisible: isAmountVisible,
-          ),
-          SizedBox(height: 25),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(11, 0, 0, 0),
+          const SizedBox(height: 25),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(11, 0, 0, 0),
             child: Text(
               'What would you like to do next?',
               style: TextStyle(
@@ -161,8 +176,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          SizedBox(height: 20),
-
+          const SizedBox(height: 20),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -170,23 +184,31 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisCount: 2,
                 mainAxisSpacing: 25,
                 crossAxisSpacing: 15,
-                childAspectRatio: 0.78, // adjust as needed to get perfect height/width
+                childAspectRatio: 0.78,
                 children: [
                   HomeContainer(
                     title: 'Add Income',
                     imagePath: 'assets/images/add_money.png',
                     color: Colors.greenAccent,
-                    onTap: () => print('Add Income'),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => AddIncomeScreen()),
+                    ),
                   ),
                   HomeContainer(
                     title: 'Add Expense',
                     imagePath: 'assets/images/addexpence.png',
                     color: Colors.deepOrangeAccent[100],
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => AddExpenseScreen()),
+                    ),
                   ),
                   HomeContainer(
                     title: 'Scan Receipt',
                     imagePath: 'assets/images/receipt1.jpg',
                     color: Colors.purple[100],
+                    onTap: ()=>Navigator.push(context,MaterialPageRoute(builder: (context)=>ReceiptScanPage())),
                   ),
                   HomeContainer(
                     title: 'Goals',
@@ -201,10 +223,50 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-          )
-
+          ),
         ],
       ),
     );
   }
+}
+
+Widget _buildSummaryItem(
+    BuildContext context, {
+      required String title,
+      required String amount,
+      required IconData icon,
+      required Color color,
+    }) {
+  return Container(
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: color.withOpacity(0.1),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 16, color: color),
+            const SizedBox(width: 4),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 7),
+        Text(
+          'NPR $amount',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: color,
+          ),
+        ),
+      ],
+    ),
+  );
 }

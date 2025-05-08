@@ -1,5 +1,9 @@
+import 'package:cashcare/models/navbar_provider.dart';
+import 'package:cashcare/providers/profile_provider.dart';
+import 'package:cashcare/screens/bottom_navs.dart' show BottomNavbar;
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:provider/provider.dart';
 import 'package:cashcare/screens/home_screen.dart';
 import 'package:cashcare/auth/login_screen.dart';
 import 'package:cashcare/features/splash/splash_screen.dart';
@@ -18,8 +22,6 @@ class MyApp extends StatelessWidget {
     try {
       final refreshToken = await _storage.read(key: 'refresh_token');
       if (refreshToken == null) return false;
-
-      // Optional: Add JWT expiration check here
       return true;
     } catch (e) {
       return false;
@@ -28,20 +30,30 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<bool>(
-      future: _checkAuthStatus(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const MaterialApp(home: Scaffold(body: Center(child: CircularProgressIndicator())));
-        }
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => BottomNavProvider()),
+        // Add other providers here as needed
+        ChangeNotifierProvider(create: (_) => ProfileProvider()),
+      ],
+      child: FutureBuilder<bool>(
+        future: _checkAuthStatus(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const MaterialApp(
+              debugShowCheckedModeBanner: false,
+              home: Scaffold(body: Center(child: CircularProgressIndicator())),
+            );
+          }
 
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          title: 'CashCare',
-          theme: ThemeData(primarySwatch: Colors.blue),
-          home: snapshot.data == true ? HomeScreen() : SplashScreen(),
-        );
-      },
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: 'CashCare',
+            theme: ThemeData(primarySwatch: Colors.blue),
+            home: snapshot.data == true ? BottomNavbar() : SplashScreen(),
+          );
+        },
+      ),
     );
   }
 }

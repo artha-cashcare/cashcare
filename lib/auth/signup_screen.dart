@@ -1,6 +1,11 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:cashcare/auth/login_screen.dart';
 import 'package:cashcare/services/auth_service.dart';
+import 'package:cashcare/utils/snackbar_service.dart' show SnackBarService;
 import 'package:flutter/material.dart';
+import 'package:flutter_iconly/flutter_iconly.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -26,68 +31,69 @@ class _SignupPageState extends State<SignupPage> {
 
   bool isLoading = false;
   void _submit() async {
-    final isFormValid = _formKey.currentState!.validate();
+    if (!_formKey.currentState!.validate() || !_termsAccepted) {
+      setState(() => _showTermsError = !_termsAccepted);
+      SnackBarService.showCustomSnackBar(context: context,message: 'Please complete all fields and accept the terms.',icon: Icon(IconlyBold.danger),backgroundColor: Colors.red,textColor: Colors.white);
+      return;
+    }
 
-    if (isFormValid && _termsAccepted) {
-      setState(() {
-        _showTermsError = false;
-        isLoading = true;
-      });
+    setState(() {
+      _showTermsError = false;
+      isLoading = true;
+    });
 
-      try {
-        await authService.register(
-          email: emailController.text,
-          password: passwordController.text,
-          firstName: nameController.text.split(" ")[0],
-          lastName: nameController.text.split(" ").last,
-          phoneNumber: phoneController.text,
-        );
+    try {
+      if (!await checkInternetConnection()) {
+        SnackBarService.showCustomSnackBar(context: context,message: 'No internet Connection.',icon: Icon(IconlyBold.danger),backgroundColor: Colors.red,textColor: Colors.white);
+        return;
+      }
 
-        if (!mounted) return;
+      await authService.register(
+        email: emailController.text,
+        password: passwordController.text,
+        firstName: nameController.text.split(" ")[0],
+        lastName: nameController.text.split(" ").last,
+        phoneNumber: phoneController.text,
+      ).timeout(const Duration(seconds: 10));
+
+      SnackBarService.showCustomSnackBar(context: context,message: 'Registration Successful.',icon: Icon(Icons.check_circle_outline),backgroundColor: Colors.green,textColor: Colors.white);
+      if (mounted) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const LoginPage()),
         );
-      } catch (e) {
-        if (!mounted) return;
-        String errorMessage = 'Registration failed';
-
-        // Extract the actual error message from the exception
-        if (e.toString().contains('custom user with this email already exists.')) {
-          errorMessage = 'This email is already registered.';
-        } else if (e.toString().contains('Network error')) {
-          errorMessage = 'Network error. Please check your internet connection.';
-        } else {
-          errorMessage = e.toString().replaceFirst('Exception: ', '');
-        }
-print(errorMessage);
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Registration Error'),
-            content: Text(errorMessage),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
-      } finally {
-        if (mounted) setState(() => isLoading = false);
       }
-    } else {
-      setState(() => _showTermsError = !_termsAccepted);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please complete all fields and accept the terms."),
-          duration: Duration(seconds: 2),
-        ),
-      );
+    } on TimeoutException {
+      SnackBarService.showCustomSnackBar(context: context,message: 'Server is not responding,please try again.',icon: Icon(IconlyBold.danger),backgroundColor: Colors.red,textColor: Colors.white);
+    } catch (e) {
+      final errorMessage = _parseErrorMessage(e);
+      SnackBarService.showCustomSnackBar(context: context,message: errorMessage,icon: Icon(IconlyBold.danger),backgroundColor: Colors.red,textColor: Colors.white);
+    } finally {
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
+  String _parseErrorMessage(dynamic e) {
+    if (e.toString().contains('custom user with this email already exists') ||
+        e.toString().contains('Email already registered')) {
+      return 'This email is already registered.';
+    } else if (e.toString().contains('Network error')) {
+      return 'Network error. Please check your internet connection.';
+    }
+    return e.toString().replaceFirst('Exception: ', '');
+  }
+
+
+
+// Helper function to check internet connectivity
+  Future<bool> checkInternetConnection() async {
+    try {
+      final result = await InternetAddress.lookup('example.com');
+      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+    } on SocketException catch (_) {
+      return false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
