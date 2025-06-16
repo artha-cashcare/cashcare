@@ -6,11 +6,11 @@ import 'package:http/http.dart' as http;
 
 class AuthService {
   final _storage = const FlutterSecureStorage();
-  // final String baseUrl = 'http://10.0.2.2:8000/api/auth';
-  final String baseUrl = 'http://192.168.1.70:8000/api/auth';
+  final String baseUrl = 'http://10.0.2.2:8000/api/auth';
+  // final String baseUrl = 'http://192.168.1.66:8000/api/auth';
 
-  // static const String _baseUrls = 'http://10.0.2.2:8000/api';
-  static const String _baseUrls = 'http://192.168.1.70:8000/api';
+  static const String _baseUrls = 'http://10.0.2.2:8000/api';
+  // static const String _baseUrls = 'http://192.168.1.70:8000/api';
 
 
   Future<void> login({
@@ -29,7 +29,6 @@ class AuthService {
         await _storeTokens(
           accessToken: responseData['access'],
           refreshToken: responseData['refresh'],
-          userName: responseData['user']?['first_name'],
         );
       } else {
         final errorData = json.decode(response.body);
@@ -87,13 +86,10 @@ class AuthService {
   Future<void> _storeTokens({
     required String accessToken,
     required String refreshToken,
-    String? userName,
   }) async {
     await _storage.write(key: 'access_token', value: accessToken);
     await _storage.write(key: 'refresh_token', value: refreshToken);
-    if (userName != null) {
-      await _storage.write(key: 'user_name', value: userName);
-    }
+
   }
 
   Future<void> refreshToken() async {

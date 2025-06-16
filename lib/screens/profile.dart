@@ -1,6 +1,11 @@
+import 'package:cashcare/auth/login_screen.dart';
+import 'package:cashcare/models/navbar_provider.dart';
 import 'package:cashcare/screens/edit_profile.dart';
 import 'package:cashcare/services/auth_interceptor.dart';
+import 'package:cashcare/services/auth_service.dart';
+import 'package:cashcare/services/income_expense_services.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_iconly/flutter_iconly.dart';
 import 'package:provider/provider.dart';
 import 'package:cashcare/providers/profile_provider.dart';
@@ -11,129 +16,317 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final Color primaryColor = Color(0xFF1B5E20);
-  final Color accentColor = Color(0xFF69F0AE);
-  final Color premiumColor = Color(0xFFD4AF37);
-  final Color cardColor = Color(0xFFFAFAFA);
-  final Color textColor = Color(0xFF212121);
-  final Color secondaryTextColor = Color(0xFF757575);
+  final AuthService _authService = AuthService();
+  final ApiService _apiService = ApiService();
 
-  late TextEditingController firstNameController;
-  late TextEditingController secondNameController;
-  late TextEditingController phoneController;
-  late TextEditingController emailController;
-  late TextEditingController addressController;
+  double totalIncome = 0.0;
+  double totalExpense = 0.0;
+  double savings = 0.0;
+  double savingsRate = 0.0;
+  bool isLoadingFinancialData = false;
+
 
   @override
   void initState() {
     super.initState();
-    firstNameController = TextEditingController(text: '');
-    secondNameController = TextEditingController(text: '');
-    phoneController = TextEditingController(text: '');
-    emailController = TextEditingController(text: '');
-    addressController = TextEditingController(text: '');
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<ProfileProvider>(context, listen: false).fetchProfile();
     });
+    _fetchFinancialData();
   }
 
-  @override
-  void dispose() {
-    firstNameController.dispose();
-    secondNameController.dispose();
-    phoneController.dispose();
-    emailController.dispose();
-    addressController.dispose();
-    super.dispose();
+  Future<void> _fetchFinancialData() async {
+    setState(() {
+      isLoadingFinancialData = true;
+    });
+
+    try {
+      final income = await _apiService.getTotalIncome();
+      final expense = await _apiService.getTotalExpense();
+      final savings = income - expense;
+      final savingsRate = income > 0 ? (savings / income) * 100 : 0;
+
+      setState(() {
+        this.totalIncome = income;
+        this.totalExpense = expense;
+        this.savings = savings;
+        this.savingsRate = savingsRate.toDouble();
+      });
+    } catch (e) {
+      print('Error fetching financial data: $e');
+    } finally {
+      setState(() {
+        isLoadingFinancialData = false;
+      });
+    }
+  }
+
+  Future<void> _logout(BuildContext context) async {
+    try {
+      await _authService.logout();
+      if (!mounted) return;
+
+      final navProvider = Provider.of<BottomNavProvider>(context, listen: false);
+      navProvider.resetToHome();
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => LoginPage()),
+            (route) => false,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Logout failed: ${e.toString()}'))
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: Colors.grey,
+        statusBarIconBrightness: Brightness.dark,
+      ),
+    );
+
     return Consumer<ProfileProvider>(
       builder: (context, profileProvider, _) {
-        if (profileProvider.profile != null && !profileProvider.loading) {
-          final profile = profileProvider.profile!;
-          firstNameController.text = profile['first_name'] ?? 'Guest';
-          secondNameController.text = profile['last_name'] ?? '';
-          phoneController.text = profile['phone'] ?? 'Not provided';
-          emailController.text = profile['email'] ?? 'Not provided';
-          addressController.text = profile['address'] ?? 'Not provided';
-        }
+        final profile = profileProvider.profile;
+        final firstName = profile?['first_name'] ?? 'Guest';
+        final lastName = profile?['last_name'] ?? '';
+        final email = profile?['email'] ?? 'Not provided';
+        final phone = profile?['phone'] ?? 'Not provided';
+        final address = profile?['address'] ?? 'Not provided';
+        final profileImage = profile?['profile_image'] ??
+            'https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcRzQbUNMS6JcPMKa7LJWV1SGxAh97jvFHxJT_RPNHbfZdARf4p5XVxNA1DAqAIvdL4nCN9sLGV8oOqekgGtfLrQZw';
 
         return Scaffold(
           backgroundColor: Colors.white,
+          appBar: AppBar(
+            elevation: 0,
+            backgroundColor: Colors.white,
+            title: Text(
+              'Account',
+              style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
+            ),
+            actions: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: IconButton(onPressed: (){_logout(context);}, icon: Icon(Icons.logout))
+              ),
+            ],
+            bottom: PreferredSize(
+              preferredSize: Size.fromHeight(0.0),
+              child: Container(
+                color: Colors.grey.shade500,
+                height: 1.0,
+              ),
+            ),
+          ),
           body: SafeArea(
-            child:
-                profileProvider.loading && profileProvider.profile == null
-                    ? Center(child: CircularProgressIndicator())
-                    : SingleChildScrollView(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 24,
+            child: SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: MediaQuery.of(context).size.height,
+                ),
+                child: IntrinsicHeight(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(15.0),
+                        child: Container(
+                          width: MediaQuery.of(context).size.width,
+                          padding: EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.3),
+                                spreadRadius: 2,
+                                blurRadius: 4,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              // Edit button
+                              Align(
+                                alignment: Alignment.topRight,
+                                child: GestureDetector(
+                                  onTap: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => EditProfileScreen(),
+                                    ),
+                                  ),
+                                  child: Container(
+                                    height: 40,
+                                    width: 40,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(50),
+                                      color: Colors.green.shade50,
+                                    ),
+                                    child: Align(
+                                      alignment: Alignment.center,
+                                      child: Icon(IconlyBold.edit, color: Colors.green),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 20),
+                              // Profile avatar
+                              Stack(
+                                children: [
+                                  Container(
+                                    height: 120,
+                                    width: 120,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(100),
+                                      color: Colors.green.shade50,
+                                      border: Border.all(color: Colors.green, width: 5),
+                                    ),
+                                    child: Center(
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(100),
+                                        child: Image.network(
+                                          profileImage,
+                                          fit: BoxFit.cover,
+                                          height: 100,
+                                          width: 100,
+                                          errorBuilder: (context, error, stackTrace) =>
+                                              Icon(Icons.person, size: 60, color: Colors.green),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    bottom: 1,
+                                    right: 5,
+                                    child: _buildVerifiedBadge(),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 10),
+                              Text(
+                                '$firstName $lastName',
+                                style: TextStyle(
+                                  fontSize: 25,
+                                  fontWeight: FontWeight.w500,fontFamily: 'Poppins'
+                                ),
+                              ),
+                              SizedBox(height: 10),
+                              _buildPremiumBadge(),
+                              SizedBox(height: 15),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      _buildDetailRow(Icons.email_outlined, email),
+                                      _buildDetailRow(Icons.phone, phone),
+                                      _buildDetailRow(Icons.location_on_outlined, address),
+                                      SizedBox(height: 30),
+                                      Text(
+                                        'Financial Overview',
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 18.0,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      SizedBox(height: 10),
+                                      _buildFinancialCard(),
+                                      SizedBox(height: 20),
+                                      Text(
+                                        'Account Options',
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 20.0,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      SizedBox(height: 5),
+                                      _buildMenuOption(Icons.settings, 'Settings'),
+                                      _buildMenuOption(Icons.rule, 'Terms And Conditions'),
+                                      _buildMenuOption(Icons.history_outlined, 'History'),
+                                      _buildMenuOption(Icons.info_outline, 'About Us'),
+                                      SizedBox(height: 10),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          _buildAppBar(),
-                          SizedBox(height: 24),
-                          _buildProfileCard(profileProvider),
-                          SizedBox(height: 24),
-                          _buildPremiumFinancialSummary(),
-                          SizedBox(height: 24),
-                          _buildMenuOptions(),
-                          SizedBox(height: 24),
-                        ],
-                      ),
-                    ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
         );
       },
     );
   }
 
-  Widget _buildEditableField(
-    TextEditingController fc,
-    TextEditingController sc,
-    bool enabled,
-  ) {
-    return TextField(
-      controller: TextEditingController(text: "${fc.text} ${sc.text}"),
-      enabled: enabled,
-      style: TextStyle(
-        fontSize: 22,
-        fontWeight: FontWeight.w600,
-        color: textColor,
+  Widget _buildVerifiedBadge() {
+    return Container(
+      height: 30,
+      width: 30,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(50),
       ),
-      textAlign: TextAlign.center,
-      decoration: InputDecoration(
-        border: InputBorder.none,
-        contentPadding: EdgeInsets.zero,
-        isDense: true,
+      child: Center(
+        child: Container(
+          height: 20,
+          width: 20,
+          decoration: BoxDecoration(
+            color: Colors.green,
+            borderRadius: BorderRadius.circular(50),
+          ),
+          child: Center(
+            child: Icon(
+              Icons.check,
+              color: Colors.white,
+              size: 15,
+            ),
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildEditableInfoRow(
-    IconData icon,
-    TextEditingController controller,
-  ) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8),
+  Widget _buildPremiumBadge() {
+    return Container(
+      width: 170,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        color: Colors.green.shade700,
+      ),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: secondaryTextColor),
-          SizedBox(width: 12),
-          Expanded(
-            child: TextField(
-              controller: controller,
-              enabled: false,
-              style: TextStyle(fontSize: 15, color: textColor.withOpacity(0.9)),
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.zero,
-                isDense: true,
-              ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Icon(
+              Icons.star,
+              color: Colors.amberAccent,
+              size: 17,
+            ),
+          ),
+          Text(
+            'PREMIUM MEMBER',
+            style: TextStyle(
+              color: Colors.amberAccent,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ],
@@ -141,351 +334,228 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildAppBar() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildDetailRow(IconData icon, String text) {
+    return Column(
       children: [
-        Text(
-          'My Account',
-          style: TextStyle(
-            fontSize: 26,
-            fontWeight: FontWeight.w700,
-            color: textColor,
-            letterSpacing: 0.5,
-          ),
-        ),
-        InkWell(onTap: (){AuthInterceptor.logout();},
-          child: Container(
-          padding: EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: LinearGradient(
-              colors: [
-                Color(0xFF43A047).withOpacity(0.3),
-                Color(0xFF66BB6A).withOpacity(0.3),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.green.withOpacity(0.3),
-                blurRadius: 6,
-                offset: Offset(2, 2),
+        Row(
+          children: [
+            Icon(icon, color: Colors.grey[600]),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                text,
+                style: TextStyle(
+                  fontSize: 17,
+                  color: Colors.grey.shade700,fontFamily: 'Poppins'
+                ),
               ),
-            ],
-          ),
-          child: Icon(Icons.logout_outlined, color: Colors.black),
-        ),)
+            ),
+          ],
+        ),
+        SizedBox(height: 10),
       ],
     );
   }
 
-  Widget _buildProfileCard(ProfileProvider profileProvider) {
+  Widget _buildFinancialCard() {
     return Container(
-      padding: EdgeInsets.all(24),
+      padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 12,
-            offset: Offset(0, 0),
-          ),
-        ],
-      ),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Column(
-            children: [
-              Container(
-                padding: EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: premiumColor.withOpacity(0.5),
-                    width: 2,
-                  ),
-                ),
-                child: CircleAvatar(
-                  radius: 48,
-                  backgroundImage:
-                      profileProvider.profile?['profile_image'] != null
-                          ? NetworkImage(
-                            profileProvider.profile!['profile_image'],
-                          )
-                          : NetworkImage(
-                            'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSR7A9dGuwJBYl_DSbqsdr2lGkGsIsmqhr_lw&s',
-                          ),
-                ),
-              ),
-              SizedBox(height: 16),
-              _buildEditableField(
-                firstNameController,
-                secondNameController,
-                false,
-              ),
-              SizedBox(height: 4),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                decoration: BoxDecoration(
-                  color: premiumColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: premiumColor.withOpacity(0.3),
-                    width: 1,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.workspace_premium_rounded,
-                      color: premiumColor,
-                      size: 16,
-                    ),
-                    SizedBox(width: 6),
-                    Text(
-                      'PREMIUM MEMBER',
-                      style: TextStyle(
-                        color: premiumColor,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 16),
-              _buildEditableInfoRow(Icons.phone_rounded, phoneController),
-              _buildEditableInfoRow(Icons.email_rounded, emailController),
-              _buildEditableInfoRow(
-                Icons.location_on_rounded,
-                addressController,
-              ),
-            ],
-          ),
-          Positioned(
-            top: 0,
-            right: 0,
-
-            child: FloatingActionButton.small(
-              backgroundColor: primaryColor.withOpacity(0.1),
-              elevation: 0,
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => EditProfileScreen()),
-              ),
-              child: Icon(IconlyBold.edit, size: 15, color: Colors.black),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPremiumFinancialSummary() {
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
         gradient: LinearGradient(
-          colors: [Color(0xFF2E7D32), Color(0xFF4CAF50)],
+          colors: [
+            Colors.green[800]!,
+            Colors.green[600]!,
+            Colors.green[400]!,
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
+        borderRadius: BorderRadius.circular(16.0),
         boxShadow: [
           BoxShadow(
-            color: primaryColor.withOpacity(0.2),
-            blurRadius: 12,
-            offset: Offset(0, 6),
+            color: Colors.green.withOpacity(0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const Text(
+            'Financial Overview',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16.0,  // Reduced from 18
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.3,  // Reduced from 0.5
+            ),
+          ),
+          const SizedBox(height: 6.0),  // Reduced from 8
+          const Divider(
+            color: Colors.white24,
+            thickness: 1,
+            height: 1,
+          ),
+          const SizedBox(height: 12.0),  // Reduced from 16
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.attach_money_rounded,
-                    color: premiumColor,
-                    size: 20,
-                  ),
-                  SizedBox(width: 8),
-                  Text(
-                    "FINANCIAL DASHBOARD",
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white.withOpacity(0.9),
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                ],
+              _buildFinancialItem(
+                'INCOME',
+                'Rs.${totalIncome.toStringAsFixed(2)}',
+                Icons.arrow_upward_rounded,
+                Colors.lightGreenAccent[400]!,
               ),
-              Icon(
-                Icons.more_horiz_rounded,
-                color: Colors.white.withOpacity(0.7),
-                size: 20,
+              _buildFinancialItem(
+                'EXPENSE',
+                'Rs.${totalExpense.toStringAsFixed(2)}',
+                Icons.arrow_downward_rounded,
+                Colors.orange[200]!,
+              ),
+              _buildFinancialItem(
+                'SAVINGS',
+                'Rs.${savings.toStringAsFixed(2)}',
+                Icons.savings_rounded,
+                Colors.lightBlueAccent[200]!,
               ),
             ],
           ),
-          SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildFinancialMetric("Income", "\$12,000", true),
-              _buildFinancialMetric("Expense", "\$8,000", false),
-              _buildFinancialMetric("Savings", "\$4,000", true),
-            ],
-          ),
-          SizedBox(height: 16),
-          Stack(
-            children: [
-              Container(
-                height: 6,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(3),
-                ),
-              ),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  return Container(
-                    height: 6,
-                    width: constraints.maxWidth * 0.67,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [premiumColor, Color(0xFFFFFF00)],
+          const SizedBox(height: 16.0),  // Reduced from 24
+          Container(
+            padding: const EdgeInsets.all(10.0),  // Reduced from 12
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10.0),  // Reduced from 12
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'MONTHLY SUMMARY',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 11.0,  // Reduced from 12
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 0.3,  // Reduced from 0.5
                       ),
-                      borderRadius: BorderRadius.circular(3),
-                      boxShadow: [
-                        BoxShadow(
-                          color: premiumColor.withOpacity(0.4),
-                          blurRadius: 4,
-                          spreadRadius: 1,
-                        ),
-                      ],
                     ),
-                  );
-                },
-              ),
-            ],
-          ),
-          SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "Monthly Summary",
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.white.withOpacity(0.7),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6.0, vertical: 3.0),  // Reduced padding
+                      decoration: BoxDecoration(
+                        color: savingsRate >= 0
+                            ? Colors.lightGreen.withOpacity(0.2)
+                            : Colors.red.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20.0),
+                      ),
+                      child: Text(
+                        '${savingsRate.toStringAsFixed(1)}% Rate',
+                        style: TextStyle(
+                          color: savingsRate >= 0
+                              ? Colors.lightGreenAccent[100]
+                              : Colors.red[100],
+                          fontSize: 11.0,  // Reduced from 12
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              Text(
-                "67% Savings Rate",
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: premiumColor,
+                const SizedBox(height: 8.0),  // Reduced from 12
+                Text(
+                  'Rs. ${savings.toStringAsFixed(2)} saved',
+                  style: const TextStyle(  // Shortened text
+                    color: Colors.white,
+                    fontSize: 13.0,  // Reduced from 14
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 8.0),  // Reduced from 12
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4.0),
+                  child: LinearProgressIndicator(
+                    value: savingsRate / 100,
+                    backgroundColor: Colors.white24,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      savingsRate >= 0
+                          ? Colors.lightGreenAccent[400]!
+                          : Colors.orange[300]!,
+                    ),
+                    minHeight: 6.0,  // Reduced from 8
+                  ),
+                ),
+                const SizedBox(height: 2.0),  // Reduced from 4
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text(
+                      '${savingsRate.toStringAsFixed(1)}% of income',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 9.0,  // Reduced from 10
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildFinancialMetric(String title, String value, bool isPositive) {
+  Widget _buildFinancialItem(String title, String value, IconData icon, Color color) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: Colors.white.withOpacity(0.7),
-          ),
+        Row(
+          children: [
+            Icon(
+              icon,
+              size: 14.0,  // Reduced from 16
+              color: color,
+            ),
+            const SizedBox(width: 4.0),
+            Text(
+              title,
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 11.0,  // Reduced from 12
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 2.0),  // Reduced from 4
         Text(
           value,
-          style: TextStyle(
-            fontSize: 18,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 14.0,  // Reduced from 16
             fontWeight: FontWeight.bold,
-            color: isPositive ? premiumColor : Colors.white,
           ),
         ),
       ],
     );
   }
-
-  Widget _buildMenuOptions() {
-    return Column(
-      children: [
-        _buildMenuOption(Icons.history_outlined, "History"),
-        _buildMenuOption(Icons.help_outline, "FAQs"),
-        _buildMenuOption(Icons.info_outline, "About"),
-        _buildMenuOption(Icons.settings, "Settings"),
-      ],
-    );
-  }
-
-  Widget _buildMenuOption(IconData icon, String title) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 6,
-            offset: Offset(0, 3),
-          ),
-        ],
-      ),
-      child: ListTile(
-        leading: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: primaryColor.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, color: primaryColor),
-        ),
-        title: Text(
-          title,
-          style: TextStyle(fontWeight: FontWeight.w500, color: textColor),
-        ),
-        trailing: Icon(Icons.chevron_right_rounded, color: secondaryTextColor),
-        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        onTap: () {},
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(IconData icon, String value) {
+  Widget _buildMenuOption(IconData icon, String text) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.only(left: 10.0, right: 0, top: 10, bottom: 0),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: secondaryTextColor),
-          SizedBox(width: 12),
-          Text(
-            value,
-            style: TextStyle(fontSize: 15, color: textColor.withOpacity(0.9)),
-          ),
+          Icon(icon, color: Colors.green.shade700),
+          SizedBox(width: 5),
+          Text(text, style: TextStyle(fontSize: 17, color: Colors.grey.shade700,fontFamily: 'Poppins')),
+          Spacer(),
+          IconButton(
+              onPressed: (){},
+              icon: Icon(Icons.keyboard_arrow_right_rounded)
+          )
         ],
       ),
     );

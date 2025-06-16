@@ -1,6 +1,7 @@
 import 'package:cashcare/models/navbar_provider.dart';
 import 'package:cashcare/providers/profile_provider.dart';
 import 'package:cashcare/screens/bottom_navs.dart' show BottomNavbar;
+import 'package:cashcare/services/auth_interceptor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
@@ -15,8 +16,7 @@ void main() async {
 
 class MyApp extends StatelessWidget {
   final _storage = const FlutterSecureStorage();
-
-  MyApp({super.key});
+AuthInterceptor ac=AuthInterceptor();
 
   Future<bool> _checkAuthStatus() async {
     try {

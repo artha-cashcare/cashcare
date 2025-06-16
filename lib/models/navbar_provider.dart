@@ -9,4 +9,10 @@ class BottomNavProvider extends ChangeNotifier {
     _currentIndex = index;
     notifyListeners();
   }
+
+
+  void resetToHome() {  // Add this new method
+    _currentIndex = 0;
+    notifyListeners();
+  }
 }

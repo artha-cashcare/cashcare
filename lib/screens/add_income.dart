@@ -1,4 +1,5 @@
 import 'package:cashcare/models/income_source.dart';
+import 'package:cashcare/services/income_expense_services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_iconly/flutter_iconly.dart';
@@ -33,10 +34,29 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
     super.dispose();
   }
 
-  void _submitIncome() {
+  void _submitIncome() async {
     if (_formKey.currentState!.validate()) {
       final source = _selectedSource ?? _sourceController.text;
-      print('income added');
+      final amount = double.tryParse(_amountController.text);
+
+      if (amount != null) {
+        try {
+          await ApiService().storeIncome(amount, source);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Income added successfully!')),
+          );
+          _amountController.clear();
+          _sourceController.clear();
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to add income. Please try again.')),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Please enter a valid amount')),
+        );
+      }
     }
   }
 
@@ -67,7 +87,15 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
                 padding: EdgeInsets.symmetric(vertical: 20),
                 child: Column(
                   children: [
-                    Icon(Icons.trending_up, size: 50, color: Colors.green),
+                    Container(decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(50)
+                    ),
+                        
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Icon(Icons.trending_up, size: 50, color: Colors.green),
+                        )),
                     SizedBox(height: 10),
                     Text(
                       'Record Your Income',
@@ -107,7 +135,8 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
                 controller: _amountController,
                 decoration: InputDecoration(
                   labelText: 'Amount',
-                  prefixIcon: Icon(Icons.currency_rupee, color: Colors.green),
+                  prefixText: '₨',  // Nepali Rupee symbol
+                  prefixStyle: TextStyle(fontSize: 20),  // Adjust font size
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),

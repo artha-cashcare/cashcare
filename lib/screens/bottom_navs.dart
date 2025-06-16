@@ -1,7 +1,8 @@
 import 'dart:ui';
-
 import 'package:cashcare/models/navbar_provider.dart';
+import 'package:cashcare/screens/history.dart';
 import 'package:cashcare/screens/profile.dart' show ProfileScreen;
+import 'package:cashcare/screens/receipt_scan.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_iconly/flutter_iconly.dart';
@@ -12,7 +13,7 @@ class BottomNavbar extends StatelessWidget {
   final List<Widget> _pages = [
     HomeScreen(), // 0
     Container(child: Center(child: Text('Goals screen'))), // 1
-    Container(child: Center(child: Text('History screen'))), // 2
+    PlaceTypeView(),
     ProfileScreen(), // 3
   ];
 
@@ -52,9 +53,11 @@ class BottomNavbar extends StatelessWidget {
         color: Color(0xFF4CAF50),
         onPressed: () {
           Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => Container(child: Center(child: Text('Scanning page'))),
-          ));
+            context,
+            MaterialPageRoute(
+              builder: (context) => ReceiptScanPage(),
+            ),
+          );
         },
       ),
     );

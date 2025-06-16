@@ -104,9 +104,9 @@ class _SignupPageState extends State<SignupPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: 10),
-              Image.asset('assets/images/logo.png', height: 130),
-              const SizedBox(height: 10),
+              const SizedBox(height: 0),
+              Image.asset('assets/images/logo3.png', height: 150),
+              const SizedBox(height: 5),
               const Text(
                 "Welcome to CashCare",
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),

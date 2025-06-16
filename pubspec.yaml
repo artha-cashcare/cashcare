@@ -46,6 +46,9 @@ dependencies:
   video_player: ^2.9.5
   animations: ^2.0.11
   provider: ^6.1.5
+  infinite_scroll_pagination: ^5.0.0
+  flutter_svg: ^2.1.0
+  fluttertoast: ^8.2.12
 
 
 dev_dependencies:

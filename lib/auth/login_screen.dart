@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:cashcare/auth/forgot_password.dart';
 import 'package:cashcare/auth/signup_screen.dart';
 import 'package:cashcare/screens/bottom_navs.dart';
+import 'package:cashcare/screens/history.dart';
 import 'package:cashcare/screens/home_screen.dart';
 import 'package:cashcare/services/auth_service.dart';
 import 'package:cashcare/utils/snackbar_service.dart' show SnackBarService;
@@ -25,9 +26,9 @@ class _LoginPageState extends State<LoginPage> {
   bool _obscurePassword = true;
   bool _isLoading = false;
 
-  // Submit Function
+  // // Submit Function
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+    if(!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
@@ -62,9 +63,10 @@ class _LoginPageState extends State<LoginPage> {
         textColor: Colors.white,
       );
 
-      Navigator.pushReplacement(
+      Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (_) => BottomNavbar()),
+        MaterialPageRoute(builder: (context) => BottomNavbar()), // Go to HomePage
+            (route) => false, // Clear all routes
       );
     } on TimeoutException {
       if (!mounted) return;
@@ -121,9 +123,9 @@ class _LoginPageState extends State<LoginPage> {
           padding: const EdgeInsets.all(24.0),
           child: Column(
             children: [
-              Image.asset('assets/images/logo.png', height: 150),
+              Image.asset('assets/images/logo3.png', height: 150),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
               const Text(
                 'Welcome Back!',
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),

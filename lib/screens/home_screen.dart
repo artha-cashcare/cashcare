@@ -1,24 +1,32 @@
 import 'package:cashcare/auth/login_screen.dart';
 import 'package:cashcare/screens/add_expense.dart';
 import 'package:cashcare/screens/add_income.dart';
+import 'package:cashcare/screens/home_screen.dart';
 import 'package:cashcare/screens/receipt_scan.dart';
 import 'package:cashcare/services/auth_service.dart';
+import 'package:cashcare/services/income_expense_services.dart';
+import 'package:cashcare/services/profile_service.dart';
 import 'package:cashcare/widgets/home_button_container.dart';
+import 'package:cashcare/widgets/homescreen_loader.dart';
 import 'package:cashcare/widgets/row_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_iconly/flutter_iconly.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<HomeScreen> createState() => _HomePageState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomePageState extends State<HomeScreen> {
   final AuthService _authService = AuthService();
-  String userName = '';
+  String userName = 'Lokraj'; // Default name
   bool isAmountVisible = true;
+  bool isLoading = true;
+
+  double totalIncome = 0.0;
+  double totalExpense = 0.0;
+  Map<String, dynamic>? _userProfile;
 
   @override
   void initState() {
@@ -27,246 +35,440 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadUserData() async {
-    final name = await _authService.getUsername();
-    setState(() => userName = name ?? 'Guest');
-  }
-
-  Future<void> _logout(BuildContext context) async {
     try {
-      await _authService.logout();
-      if (!mounted) return;
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => LoginPage()),
-            (route) => false,
-      );
+      final results = await Future.wait([
+        ProfileService.getProfile(),
+        _authService.getUsername(),
+        ApiService().getTotalIncome(),
+        ApiService().getTotalExpense(),
+      ]);
+
+      setState(() {
+        _userProfile = results[0] as Map<String, dynamic>?;
+        userName = _userProfile?['first_name'] ?? 'Guest';
+        totalIncome = results[2] as double;
+        totalExpense = results[3] as double;
+        isLoading = false;
+      });
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Logout failed: ${e.toString()}')));
+      setState(() {
+        isLoading = false;
+      });
+      print('Failed to load data: $e');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    if (isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: FloatingDotLoading(),
+        ),
+      );
+    }
 
     return Scaffold(
-      appBar: AppBar(
-        leading: Container(
-          margin: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.blueGrey, width: 2),
-            color: Colors.red,
-            borderRadius: BorderRadius.circular(50),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(50),
-            child: Image.asset(
-              'assets/images/home_avatar.jpg',
-              fit: BoxFit.cover,
-            ),
-          ),
-        ),
-        title: Text(
-          'Hi, $userName',
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(IconlyBold.notification, color: Colors.black87),
-            onPressed: () => _logout(context),
-          ),
-        ],
-      ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Balance Card
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
-            child: Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+      backgroundColor: const Color(0xFFF8FAFD),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Greeting row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Hello, $userName!",
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.grey[800],
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "Welcome back to your finances",
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.green.withOpacity(0.2),
+                        width: 2,
+                      ),
+                    ),
+                    child: CircleAvatar(
+                      radius: 22,
+                      backgroundColor: Colors.green,
+                      child: Text(
+                        userName.isNotEmpty ? userName[0].toUpperCase() : "G",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              color: theme.cardColor,
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
+              const SizedBox(height: 25),
+
+              // Balance Card
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF3DAE81), Color(0xFF50C878)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.green.withOpacity(0.2),
+                      blurRadius: 15,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Current Balance',
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'NPR ',
-                          style: theme.textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: theme.primaryColor,
+                        const Text(
+                          "Total Balance",
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
                           ),
                         ),
-                        Text(
-                          isAmountVisible ? '3,590.00' : '••••••',
-                          style: theme.textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.5,
+                        GestureDetector(
+                          onTap: () => setState(() => isAmountVisible = !isAmountVisible),
+                          child: Icon(
+                            isAmountVisible
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                            size: 20,
+                            color: Colors.white70,
                           ),
-                        ),
-                        const Spacer(),
-                        IconButton(
-                          onPressed: () => setState(() => isAmountVisible = !isAmountVisible),
-                          icon: Icon(
-                            isAmountVisible ? Icons.visibility : Icons.visibility_off,
-                            color: theme.primaryColor,
-                          ),
-                          splashRadius: 20,
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    // Income/Expense Summary
+                    const SizedBox(height: 5),
+                    Text(
+                      isAmountVisible
+                          ? "NPR ${(totalIncome - totalExpense).toStringAsFixed(2)}"
+                          : "••••••",
+                      style: const TextStyle(
+                        fontSize: 32,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Expanded(
-                          child: _buildSummaryItem(
-                            context,
-                            title: 'Income',
-                            amount: '4,500.00',
-                            icon: Icons.arrow_upward,
-                            color: Colors.green,
-                          ),
+                        _buildAmountIndicator(
+                          icon: Icons.arrow_upward,
+                          color: Colors.white,
+                          title: "Income",
+                          amount: "NPR ${totalIncome.toStringAsFixed(2)}",
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildSummaryItem(
-                            context,
-                            title: 'Expense',
-                            amount: '910.00',
-                            icon: Icons.arrow_downward,
-                            color: Colors.red,
-                          ),
+                        _buildAmountIndicator(
+                          icon: Icons.arrow_downward,
+                          color: Colors.orange[200]!,
+                          title: "Expenses",
+                          amount: "NPR ${totalExpense.toStringAsFixed(2)}",
                         ),
                       ],
                     ),
                   ],
                 ),
               ),
-            ),
-          ),
-          const SizedBox(height: 25),
-          const Padding(
-            padding: EdgeInsets.fromLTRB(11, 0, 0, 0),
-            child: Text(
-              'What would you like to do next?',
-              style: TextStyle(
-                fontSize: 20,
-                fontFamily: 'Poppins',
-                fontWeight: FontWeight.w600,
+              const SizedBox(height: 30),
+
+              // Quick Actions
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  "Quick Actions",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 18,
+                    color: Colors.grey[800],
+                  ),
+                ),
               ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: GridView.count(
-                crossAxisCount: 2,
-                mainAxisSpacing: 25,
-                crossAxisSpacing: 15,
-                childAspectRatio: 0.78,
+              const SizedBox(height: 12),
+              Row(
                 children: [
-                  HomeContainer(
-                    title: 'Add Income',
-                    imagePath: 'assets/images/add_money.png',
-                    color: Colors.greenAccent,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => AddIncomeScreen()),
+                  Expanded(
+                    child: _buildActionButton(
+                      icon: Icons.add,
+                      color: Colors.green,
+                      text: "Add Income",
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AddIncomeScreen(),
+                        ),
+                      ),
                     ),
                   ),
-                  HomeContainer(
-                    title: 'Add Expense',
-                    imagePath: 'assets/images/addexpence.png',
-                    color: Colors.deepOrangeAccent[100],
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => AddExpenseScreen()),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildActionButton(
+                      icon: Icons.remove,
+                      color: const Color(0xFFF56565),
+                      text: "Add Expense",
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AddExpenseScreen(),
+                        ),
+                      ),
                     ),
-                  ),
-                  HomeContainer(
-                    title: 'Scan Receipt',
-                    imagePath: 'assets/images/receipt1.jpg',
-                    color: Colors.purple[100],
-                    onTap: ()=>Navigator.push(context,MaterialPageRoute(builder: (context)=>ReceiptScanPage())),
-                  ),
-                  HomeContainer(
-                    title: 'Goals',
-                    imagePath: 'assets/images/goal.jpg',
-                    color: Colors.lightBlue[50],
-                  ),
-                  HomeContainer(
-                    title: 'Prediction',
-                    imagePath: 'assets/images/prediction.jpg',
-                    color: Colors.cyan[50],
                   ),
                 ],
               ),
-            ),
+              const SizedBox(height: 30),
+
+              // Financial Tools
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  "Financial Tools",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 18,
+                    color: Colors.grey[800],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 15),
+
+              // Scrollable GridView
+              Expanded(
+                child: GridView(
+                  padding: EdgeInsets.zero,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 1.2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                  ),
+                  children: [
+                    ToolCard(
+                      icon: Icons.document_scanner_outlined,
+                      color: const Color(0xFF3DAE81),
+                      title: "Receipt Scan",
+                      subtitle: "Track your spending",
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ReceiptScanPage(),
+                        ),
+                      ),
+                    ),
+                    ToolCard(
+                      icon: Icons.timeline_rounded,
+                      color: const Color(0xFF4FD1C5),
+                      title: "Goals",
+                      subtitle: "Manage your goals",
+                    ),
+                    ToolCard(
+                      icon: Icons.account_balance_wallet,
+                      color: const Color(0xFFF6AD55),
+                      title: "Prediction",
+                      subtitle: "Control your money",
+                    ),
+                    ToolCard(
+                      icon: Icons.notifications,
+                      color: Colors.green,
+                      title: "Alerts",
+                      subtitle: "Bill reminders",
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAmountIndicator({
+    required IconData icon,
+    required Color color,
+    required String title,
+    required String amount,
+  }) {
+    return Row(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          height: 40,
+          width: 40,
+          child: Icon(
+            icon,
+            color: color,
+            size: 20,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 12,
+              ),
+            ),
+            Text(
+              amount,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required Color color,
+    required String text,
+    required VoidCallback onPressed,
+  }) {
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(
+        icon,
+        color: Colors.white,
+        size: 20,
+      ),
+      label: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
+        ),
+      ),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        elevation: 0,
+        shadowColor: Colors.transparent,
       ),
     );
   }
 }
 
-Widget _buildSummaryItem(
-    BuildContext context, {
-      required String title,
-      required String amount,
-      required IconData icon,
-      required Color color,
-    }) {
-  return Container(
-    padding: const EdgeInsets.all(12),
-    decoration: BoxDecoration(
-      color: color.withOpacity(0.1),
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(icon, size: 16, color: color),
-            const SizedBox(width: 4),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey[600],
+class ToolCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color color;
+  final VoidCallback? onTap;
+
+  const ToolCard({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.color,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                height: 50,
+                width: 50,
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  icon,
+                  color: color,
+                  size: 24,
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 7),
-        Text(
-          'NPR $amount',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: color,
+              const SizedBox(height: 16),
+              Text(
+                title,
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                  color: Colors.grey[800],
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey[600],
+                ),
+              )
+            ],
           ),
         ),
-      ],
-    ),
-  );
+      ),
+    );
+  }
 }

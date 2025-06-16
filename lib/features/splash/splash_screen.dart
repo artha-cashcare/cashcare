@@ -148,7 +148,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
         child: ClipRRect(
           borderRadius: BorderRadius.circular(20),
           child: Image.asset(
-            'assets/images/logo.png',
+            'assets/images/logo3.png',
             height: 180,
             width: 180,
           ),

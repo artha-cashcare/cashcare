@@ -1,3 +1,4 @@
+import 'package:cashcare/services/income_expense_services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_iconly/flutter_iconly.dart';
@@ -36,79 +37,31 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     super.dispose();
   }
 
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
-      builder: (BuildContext context, Widget? child) {
-        return Theme(
-          data: ThemeData.light().copyWith(
-            colorScheme: ColorScheme.light(
-              primary: Colors.green,
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: Colors.black,
-            ),
-            dialogBackgroundColor: Colors.white,
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-      });
-    }
-  }
 
-  void _submitExpense() {
+
+  void _submitExpense() async {
     if (_formKey.currentState!.validate()) {
-      final amount = double.tryParse(_amountController.text) ?? 0;
       final category = _selectedCategory ?? _categoryController.text;
+      final amount = double.tryParse(_amountController.text);
 
-
-      // Show confirmation dialog
-      showDialog(
-        context: context,
-        builder:
-            (context) => AlertDialog(
-              title: Text('Expense Recorded'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Category: $category'),
-                  SizedBox(height: 8),
-                  Text('Amount: \$${amount.toStringAsFixed(2)}'),
-                  SizedBox(height: 8),
-                  Text(
-                    'Date: ${_selectedDate.toLocal().toString().split(' ')[0]}',
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('OK', style: TextStyle(color: Colors.green)),
-                ),
-              ],
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-      ).then((_) {
-        // Clear form after submission
-        _amountController.clear();
-        _categoryController.clear();
-        _descriptionController.clear();
-        setState(() {
-          _selectedCategory = null;
-          _selectedDate = DateTime.now();
-        });
-      });
+      if (amount != null) {
+        try {
+          await ApiService().storeExpense(amount, category);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Income added successfully!')),
+          );
+          _amountController.clear();
+          _categoryController.clear();
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to add income. Please try again.')),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Please enter a valid amount')),
+        );
+      }
     }
   }
 
@@ -135,13 +88,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Header
               Container(
                 padding: EdgeInsets.symmetric(vertical: 0),
                 child: Column(
                   children: [
                     Icon(Icons.trending_down, size: 50, color: Colors.red),
-                    // SizedBox(height: 10),
                     Text(
                       'Track Your Expense',
                       style: TextStyle(
@@ -154,7 +105,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 ),
               ),
               SizedBox(height: 30),
-              // Category Field
               TextFormField(
                 controller: _categoryController,
                 decoration: InputDecoration(
@@ -177,7 +127,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               ),
               SizedBox(height: 20),
 
-              // Amount Field
               TextFormField(
                 controller: _amountController,
                 decoration: InputDecoration(
@@ -207,7 +156,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               ),
               SizedBox(height: 20),
 
-              // Submit Button
               ElevatedButton(
                 onPressed: _submitExpense,
                 child: Padding(
@@ -227,7 +175,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               ),
               SizedBox(height: 30),
 
-              // Quick Category Selection
               Text(
                 'Quick Select Category',
                 style: TextStyle(
