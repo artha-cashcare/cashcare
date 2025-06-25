@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class BottomNavProvider extends ChangeNotifier {
   int _currentIndex = 0;
-  int unreadNotificationCount = 0; // you update this when fetching
+  int unreadNotificationCount = 0;
 
 
   int get currentIndex => _currentIndex;
@@ -13,7 +13,7 @@ class BottomNavProvider extends ChangeNotifier {
   }
 
 
-  void resetToHome() {  // Add this new method
+  void resetToHome() {
     _currentIndex = 0;
     notifyListeners();
   }

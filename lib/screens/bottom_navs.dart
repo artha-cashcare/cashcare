@@ -12,10 +12,10 @@ import '../screens/home_screen.dart';
 
 class BottomNavbar extends StatelessWidget {
   final List<Widget> _pages = [
-    HomeScreen(), // 0
-    NotificationsScreen(), // 1
+    HomeScreen(),
+    NotificationsScreen(),
     PlaceTypeView(),
-    ProfileScreen(), // 3
+    ProfileScreen(),
   ];
 
   @override
@@ -88,7 +88,7 @@ class BottomNavbar extends StatelessWidget {
                     children: [
                       _buildNavItem(IconlyBold.home, 0, context),
                       _buildNavItem(IconlyBold.notification, 1, context),
-                      SizedBox(width: 20), // Space for center button
+                      SizedBox(width: 20),
                       _buildNavItem(Icons.history, 2, context),
                       _buildNavItem(Icons.person, 3, context),
                     ],

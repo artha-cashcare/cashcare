@@ -33,7 +33,6 @@ AuthInterceptor ac=AuthInterceptor();
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => BottomNavProvider()),
-        // Add other providers here as needed
         ChangeNotifierProvider(create: (_) => ProfileProvider()),
       ],
       child: FutureBuilder<bool>(

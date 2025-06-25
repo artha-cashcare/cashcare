@@ -28,7 +28,6 @@ class _PlaceTypeViewState extends State<PlaceTypeView> {
               fontSize: 20,
             ),
           ),
-          // centerTitle: true,
           elevation: 0,
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(60),
@@ -116,7 +115,6 @@ class _PremiumTransactionListState extends State<PremiumTransactionList> {
     try {
       final transactions = await widget.apiService.getAllTransactions();
 
-      // Sort all transactions by date (newest first)
       transactions.sort((a, b) => b.timestamp.compareTo(a.timestamp));
 
       setState(() {
@@ -156,7 +154,6 @@ class _PremiumTransactionListState extends State<PremiumTransactionList> {
             return Center(child: CircularProgressIndicator());
           }
 
-          // Get filtered transactions and maintain the date sorting
           final filtered = _filterTransactions(snapshot.data!);
 
           if (filtered.isEmpty) {
@@ -241,7 +238,6 @@ class _PremiumTransactionListState extends State<PremiumTransactionList> {
               label: 'UNDO',
               textColor: Colors.white,
               onPressed: () {
-                // Would need to re-add to list in real implementation
               },
             ),
           ),

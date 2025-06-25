@@ -135,8 +135,8 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
                 controller: _amountController,
                 decoration: InputDecoration(
                   labelText: 'Amount',
-                  prefixText: '₨',  // Nepali Rupee symbol
-                  prefixStyle: TextStyle(fontSize: 20),  // Adjust font size
+                  prefixText: '₨',
+                  prefixStyle: TextStyle(fontSize: 20),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),

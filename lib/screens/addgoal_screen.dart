@@ -29,24 +29,26 @@ class _GoalCreationFormState extends State<GoalCreationForm> {
   }
 
   void _addRule() => setState(() => _rules.add(RuleInput()));
+
   void _removeRule(int index) => setState(() => _rules.removeAt(index));
 
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
     if (_selectedDeadline == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please select a deadline')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Please select a deadline')));
       return;
     }
 
-    List<GoalRule> rules = _rules.map((rule) {
-      return GoalRule(
-        incomeCategory: rule.categoryController.text.trim(),
-        percentage: double.parse(rule.percentageController.text.trim()),
-      );
-    }).toList();
+    List<GoalRule> rules =
+        _rules.map((rule) {
+          return GoalRule(
+            incomeCategory: rule.categoryController.text.trim(),
+            percentage: double.parse(rule.percentageController.text.trim()),
+          );
+        }).toList();
 
     try {
       await GoalService().createGoal(
@@ -56,20 +58,21 @@ class _GoalCreationFormState extends State<GoalCreationForm> {
         rules: rules,
       );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Goal created successfully!')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Goal created successfully!')));
       Navigator.pop(context);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString()}')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
     }
   }
 
-
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -82,98 +85,111 @@ class _GoalCreationFormState extends State<GoalCreationForm> {
 
   @override
   Widget build(BuildContext context) {
-    final deadlineText = _selectedDeadline == null
-        ? 'Select Deadline'
-        : DateFormat.yMMMMd().format(_selectedDeadline!);
+    final deadlineText =
+        _selectedDeadline == null
+            ? 'Select Deadline'
+            : DateFormat.yMMMMd().format(_selectedDeadline!);
 
     return Scaffold(
       appBar: AppBar(title: Text('Create Goal')),
-      body: _isSubmitting
-          ? Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-        padding: EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              // Title
-              TextFormField(
-                controller: _titleController,
-                decoration: _inputDecoration('Goal Title', Icons.title),
-                validator: (val) =>
-                val!.trim().isEmpty ? 'Enter goal title' : null,
-              ),
-              SizedBox(height: 16),
+      body:
+          _isSubmitting
+              ? Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                padding: EdgeInsets.all(16),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      TextFormField(
+                        controller: _titleController,
+                        decoration: _inputDecoration('Goal Title', Icons.title),
+                        validator:
+                            (val) =>
+                                val!.trim().isEmpty ? 'Enter goal title' : null,
+                      ),
+                      SizedBox(height: 16),
 
-              // Target Amount
-              TextFormField(
-                controller: _targetAmountController,
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
-                decoration:
-                _inputDecoration('Target Amount (₹)', Icons.attach_money),
-                validator: (val) {
-                  final v = double.tryParse(val ?? '');
-                  if (v == null || v <= 0) return 'Enter valid amount';
-                  return null;
-                },
-              ),
-              SizedBox(height: 16),
+                      TextFormField(
+                        controller: _targetAmountController,
+                        keyboardType: TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        decoration: _inputDecoration(
+                          'Target Amount (₹)',
+                          Icons.attach_money,
+                        ),
+                        validator: (val) {
+                          final v = double.tryParse(val ?? '');
+                          if (v == null || v <= 0) return 'Enter valid amount';
+                          return null;
+                        },
+                      ),
+                      SizedBox(height: 16),
 
-              // Deadline Picker
-              InkWell(
-                onTap: _pickDeadline,
-                child: InputDecorator(
-                  decoration: _inputDecoration('Deadline', Icons.calendar_today),
-                  child: Text(
-                    deadlineText,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: _selectedDeadline == null
-                          ? Colors.grey
-                          : Colors.black,
-                    ),
+                      InkWell(
+                        onTap: _pickDeadline,
+                        child: InputDecorator(
+                          decoration: _inputDecoration(
+                            'Deadline',
+                            Icons.calendar_today,
+                          ),
+                          child: Text(
+                            deadlineText,
+                            style: TextStyle(
+                              fontSize: 16,
+                              color:
+                                  _selectedDeadline == null
+                                      ? Colors.grey
+                                      : Colors.black,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 24),
+
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Savings Rules',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
+                          TextButton.icon(
+                            icon: Icon(Icons.add),
+                            label: Text('Add Rule'),
+                            onPressed: _addRule,
+                          ),
+                        ],
+                      ),
+                      ..._rules
+                          .asMap()
+                          .entries
+                          .map(
+                            (entry) => _buildRuleInput(entry.key, entry.value),
+                          )
+                          .toList(),
+
+                      SizedBox(height: 32),
+
+                      ElevatedButton.icon(
+                        icon: Icon(Icons.check),
+                        label: Text('Create Goal'),
+                        onPressed: _submit,
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: Size(double.infinity, 48),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              SizedBox(height: 24),
-
-              // Rules
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Savings Rules',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 18)),
-                  TextButton.icon(
-                    icon: Icon(Icons.add),
-                    label: Text('Add Rule'),
-                    onPressed: _addRule,
-                  )
-                ],
-              ),
-              ..._rules
-                  .asMap()
-                  .entries
-                  .map((entry) => _buildRuleInput(entry.key, entry.value))
-                  .toList(),
-
-              SizedBox(height: 32),
-
-              // Submit Button
-              ElevatedButton.icon(
-                icon: Icon(Icons.check),
-                label: Text('Create Goal'),
-                onPressed: _submit,
-                style: ElevatedButton.styleFrom(
-                  minimumSize: Size(double.infinity, 48),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 
@@ -216,7 +232,7 @@ class _GoalCreationFormState extends State<GoalCreationForm> {
             IconButton(
               icon: Icon(Icons.remove_circle, color: Colors.red),
               onPressed: () => _removeRule(index),
-            )
+            ),
         ],
       ),
     );

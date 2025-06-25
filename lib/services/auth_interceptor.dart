@@ -6,7 +6,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 class AuthInterceptor {
   static const FlutterSecureStorage _storage = FlutterSecureStorage();
   static const String baseUrl = 'http://10.0.2.2:8000';
-  // static const String baseUrl = 'http://192.168.1.70:8000';
 
 
   static Future<String?> getValidAccessToken() async {
@@ -18,7 +17,6 @@ class AuthInterceptor {
     print(accessToken);
     if (_isTokenExpired(accessToken)) {
       try {
-        //if token expire
         final newToken = await _refreshAccessToken(refreshToken);
         if (newToken != null) {
           return newToken;
@@ -31,11 +29,9 @@ class AuthInterceptor {
         return null;
       }
     }
-    //like else statement
     return accessToken;
   }
 
-  //yo chahi helper function apun ke lie
   static bool _isTokenExpired(String token) {
     try {
       final parts = token.split('.');
@@ -47,7 +43,7 @@ class AuthInterceptor {
       final currentTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
       return currentTime >= exp;
     } catch (_) {
-      return true;//if fails or expired token
+      return true;
     }
   }
 

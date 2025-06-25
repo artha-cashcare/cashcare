@@ -26,14 +26,12 @@ class _LoginPageState extends State<LoginPage> {
   bool _obscurePassword = true;
   bool _isLoading = false;
 
-  // // Submit Function
   Future<void> _submit() async {
     if(!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
     try {
-      // Check internet connection
       if (!await _hasInternetConnection()) {
         if (!mounted) return;
         SnackBarService.showCustomSnackBar(
@@ -46,7 +44,6 @@ class _LoginPageState extends State<LoginPage> {
         return;
       }
 
-      // Attempt login with timeout
       await _authService.login(
         email: _emailController.text,
         password: _passwordController.text,
@@ -54,7 +51,6 @@ class _LoginPageState extends State<LoginPage> {
 
       if (!mounted) return;
 
-      // Success
       SnackBarService.showCustomSnackBar(
         context: context,
         message: 'Login successful!',
@@ -65,8 +61,8 @@ class _LoginPageState extends State<LoginPage> {
 
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => BottomNavbar()), // Go to HomePage
-            (route) => false, // Clear all routes
+        MaterialPageRoute(builder: (context) => BottomNavbar()),
+            (route) => false,
       );
     } on TimeoutException {
       if (!mounted) return;
@@ -248,8 +244,7 @@ class _LoginPageState extends State<LoginPage> {
                   //     MaterialPageRoute(builder: (context) => BottomNavbar()),
                   //   );
                   // },
-
-                  onPressed: _isLoading ? null : _submit, // Only call _submit if not loading
+                  onPressed: _isLoading ? null : _submit,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
                     padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
@@ -261,7 +256,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   child:
                       _isLoading
-                          ? CupertinoActivityIndicator() // Show progress indicator while loading
+                          ? CupertinoActivityIndicator()
                           : Text(
                             'Sign In',
                             style: TextStyle(

@@ -42,7 +42,7 @@ class Goal {
 }
 
 class GoalRule {
-  final String incomeCategory; // String because API uses string like "salary"
+  final String incomeCategory;
   final double percentage;
 
   GoalRule({

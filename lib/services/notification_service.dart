@@ -6,10 +6,9 @@ import 'package:http/http.dart' as http;
 class NotificationService {
   final String baseUrl = 'http://10.0.2.2:8000';
 
-  // Safely get auth token and throw if missing
   Future<String> _getAuthToken() async {
     final token = await AuthInterceptor.getValidAccessToken();
-    print("🔥 Access Token: $token"); // Check this output
+    print("🔥 Access Token: $token");
 
     if (token == null || token.isEmpty) {
       throw Exception('Access token is missing or expired. Please log in again.');

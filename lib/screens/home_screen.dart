@@ -23,7 +23,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomePageState extends State<HomeScreen> {
   final AuthService _authService = AuthService();
-  String userName = 'Lokraj'; // Default name
+  String userName = 'Lokraj';
   bool isAmountVisible = true;
   bool isLoading = true;
 
@@ -80,7 +80,6 @@ class _HomePageState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Greeting row
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -130,7 +129,6 @@ class _HomePageState extends State<HomeScreen> {
               ),
               const SizedBox(height: 25),
 
-              // Balance Card
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -208,7 +206,6 @@ class _HomePageState extends State<HomeScreen> {
               ),
               const SizedBox(height: 30),
 
-              // Quick Actions
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: Text(
@@ -254,7 +251,6 @@ class _HomePageState extends State<HomeScreen> {
               ),
               const SizedBox(height: 30),
 
-              // Financial Tools
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: Text(
@@ -268,7 +264,6 @@ class _HomePageState extends State<HomeScreen> {
               ),
               const SizedBox(height: 15),
 
-              // Scrollable GridView
               Expanded(
                 child: GridView(
                   padding: EdgeInsets.zero,

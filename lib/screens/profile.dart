@@ -154,7 +154,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              // Edit button
                               Align(
                                 alignment: Alignment.topRight,
                                 child: GestureDetector(
@@ -179,7 +178,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                               ),
                               SizedBox(height: 20),
-                              // Profile avatar
                               Stack(
                                 children: [
                                   Container(
@@ -386,18 +384,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
             'Financial Overview',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 16.0,  // Reduced from 18
+              fontSize: 16.0,
               fontWeight: FontWeight.w600,
-              letterSpacing: 0.3,  // Reduced from 0.5
+              letterSpacing: 0.3,
             ),
           ),
-          const SizedBox(height: 6.0),  // Reduced from 8
+          const SizedBox(height: 6.0),
           const Divider(
             color: Colors.white24,
             thickness: 1,
             height: 1,
           ),
-          const SizedBox(height: 12.0),  // Reduced from 16
+          const SizedBox(height: 12.0),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -421,12 +419,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 16.0),  // Reduced from 24
+          const SizedBox(height: 16.0),
           Container(
-            padding: const EdgeInsets.all(10.0),  // Reduced from 12
+            padding: const EdgeInsets.all(10.0),
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10.0),  // Reduced from 12
+              borderRadius: BorderRadius.circular(10.0),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -438,14 +436,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       'MONTHLY SUMMARY',
                       style: TextStyle(
                         color: Colors.white70,
-                        fontSize: 11.0,  // Reduced from 12
+                        fontSize: 11.0,
                         fontWeight: FontWeight.w500,
-                        letterSpacing: 0.3,  // Reduced from 0.5
+                        letterSpacing: 0.3,
                       ),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 6.0, vertical: 3.0),  // Reduced padding
+                          horizontal: 6.0, vertical: 3.0),
                       decoration: BoxDecoration(
                         color: savingsRate >= 0
                             ? Colors.lightGreen.withOpacity(0.2)
@@ -458,23 +456,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           color: savingsRate >= 0
                               ? Colors.lightGreenAccent[100]
                               : Colors.red[100],
-                          fontSize: 11.0,  // Reduced from 12
+                          fontSize: 11.0,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8.0),  // Reduced from 12
+                const SizedBox(height: 8.0),
                 Text(
                   'Rs. ${savings.toStringAsFixed(2)} saved',
-                  style: const TextStyle(  // Shortened text
+                  style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 13.0,  // Reduced from 14
+                    fontSize: 13.0,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(height: 8.0),  // Reduced from 12
+                const SizedBox(height: 8.0),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(4.0),
                   child: LinearProgressIndicator(
@@ -485,10 +483,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ? Colors.lightGreenAccent[400]!
                           : Colors.orange[300]!,
                     ),
-                    minHeight: 6.0,  // Reduced from 8
+                    minHeight: 6.0,
                   ),
                 ),
-                const SizedBox(height: 2.0),  // Reduced from 4
+                const SizedBox(height: 2.0),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -496,7 +494,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       '${savingsRate.toStringAsFixed(1)}% of income',
                       style: TextStyle(
                         color: Colors.white70,
-                        fontSize: 9.0,  // Reduced from 10
+                        fontSize: 9.0,
                       ),
                     ),
                   ],
@@ -517,7 +515,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             Icon(
               icon,
-              size: 14.0,  // Reduced from 16
+              size: 14.0,
               color: color,
             ),
             const SizedBox(width: 4.0),
@@ -525,18 +523,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
               title,
               style: TextStyle(
                 color: Colors.white70,
-                fontSize: 11.0,  // Reduced from 12
+                fontSize: 11.0,
                 fontWeight: FontWeight.w500,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 2.0),  // Reduced from 4
+        const SizedBox(height: 2.0),
         Text(
           value,
           style: const TextStyle(
             color: Colors.white,
-            fontSize: 14.0,  // Reduced from 16
+            fontSize: 14.0,
             fontWeight: FontWeight.bold,
           ),
         ),

@@ -125,7 +125,7 @@ class _NotificationCard extends StatelessWidget {
     final theme = Theme.of(context);
     final isUnread = !notification.isRead;
     final iconColor = _getColorForType(notification.type);
-    final timeText = DateFormat('h:mm a').format(notification.createdAt.add(const Duration(hours: 5, minutes: 45))); // Nepal time adjustment
+    final timeText = DateFormat('h:mm a').format(notification.createdAt.add(const Duration(hours: 5, minutes: 45)));
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -145,7 +145,7 @@ class _NotificationCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () {}, // Add your onTap logic here
+          onTap: () {},
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -188,7 +188,7 @@ class _NotificationCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Padding(
-                  padding: const EdgeInsets.only(left: 40), // Align with icon
+                  padding: const EdgeInsets.only(left: 40),
                   child: Text(
                     notification.message,
                     style: theme.textTheme.bodyMedium?.copyWith(

@@ -15,16 +15,13 @@ class GoalService {
         headers: await _buildHeaders(),
       );
 
-      print('API Response: ${response.statusCode} - ${response.body}'); // Debug log
+      print('API Response: ${response.statusCode} - ${response.body}');
 
       if (response.statusCode == 200) {
-        // First decode the JSON
         final decoded = json.decode(response.body);
 
-        // Check if the decoded result is a List
         if (decoded is List) {
           return decoded.map((item) {
-            // Ensure each item is a Map
             if (item is Map<String, dynamic>) {
               return Goal.fromJson(item);
             } else {
@@ -55,7 +52,7 @@ class GoalService {
       body: json.encode({
         'title': title,
         'target_amount': targetAmount,
-        'deadline': deadline.toIso8601String().split('T')[0], // Format as YYYY-MM-DD
+        'deadline': deadline.toIso8601String().split('T')[0],
         'rules': rules.map((rule) => ({
           'income_category': rule.incomeCategory,
           'percentage': rule.percentage,
@@ -70,7 +67,7 @@ class GoalService {
     }
   }
   Future<Map<String, String>> _buildHeaders() async {
-    final token = await AuthInterceptor.getValidAccessToken(); // await it!
+    final token = await AuthInterceptor.getValidAccessToken();
     return {
       'Authorization': 'Bearer $token',
       'Content-Type': 'application/json',
@@ -91,7 +88,6 @@ class GoalService {
         return Exception('Unexpected JSON format: $body');
       }
     } catch (e) {
-      // This will catch and log any decoding issues
       print('Error decoding response: ${response.body}');
       return Exception('Invalid error response: ${response.body}');
     }

@@ -37,8 +37,6 @@ class GoalDetailScreen extends StatelessWidget {
             SizedBox(height: 16),
             _progressCard(goal),
             SizedBox(height: 16),
-
-            // Pie Chart for Saved vs Remaining
             _pieChartCard(goal),
 
             SizedBox(height: 16),

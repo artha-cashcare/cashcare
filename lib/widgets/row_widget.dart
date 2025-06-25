@@ -10,7 +10,7 @@ class RowWidget extends StatelessWidget {
     Key? key,
     required this.title,
     required this.amount,
-    this.amountColor = Colors.green, //default
+    this.amountColor = Colors.green,
     required this.isamtvisible,
   }) : super(key: key);
 

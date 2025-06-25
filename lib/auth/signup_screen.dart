@@ -85,7 +85,6 @@ class _SignupPageState extends State<SignupPage> {
 
 
 
-// Helper function to check internet connectivity
   Future<bool> checkInternetConnection() async {
     try {
       final result = await InternetAddress.lookup('example.com');

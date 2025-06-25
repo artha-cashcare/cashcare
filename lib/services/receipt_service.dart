@@ -15,12 +15,11 @@ class ReceiptService {
     required String date,
   }) async {
     try {
-      // Validate inputs
       if (receiptImage == null || amount.isEmpty || category.isEmpty || date.isEmpty) {
         throw Exception('All fields are required');
       }
 
-      final authToken = await AuthInterceptor.getValidAccessToken(); // <-- FIXED HERE
+      final authToken = await AuthInterceptor.getValidAccessToken();
 
       final amountValue = double.tryParse(amount);
       if (amountValue == null) {
@@ -32,7 +31,7 @@ class ReceiptService {
         Uri.parse('$_baseUrl/scan_receipt/'),
       );
 
-      request.headers['Authorization'] = 'Bearer $authToken'; // Now a proper string
+      request.headers['Authorization'] = 'Bearer $authToken';
       request.files.add(await http.MultipartFile.fromPath(
         'file_path',
         receiptImage.path,
