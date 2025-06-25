@@ -1,7 +1,9 @@
 import 'package:cashcare/auth/login_screen.dart';
+import 'package:cashcare/features/goals/goal_list_screen.dart';
 import 'package:cashcare/screens/add_expense.dart';
 import 'package:cashcare/screens/add_income.dart';
 import 'package:cashcare/screens/home_screen.dart';
+import 'package:cashcare/screens/notification_screen.dart';
 import 'package:cashcare/screens/receipt_scan.dart';
 import 'package:cashcare/services/auth_service.dart';
 import 'package:cashcare/services/income_expense_services.dart';
@@ -11,6 +13,7 @@ import 'package:cashcare/widgets/homescreen_loader.dart';
 import 'package:cashcare/widgets/row_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_iconly/flutter_iconly.dart';
+import 'package:cashcare/features/goals/goal_list_screen.dart';
 
 class HomeScreen extends StatefulWidget {
 
@@ -293,7 +296,14 @@ class _HomePageState extends State<HomeScreen> {
                       color: const Color(0xFF4FD1C5),
                       title: "Goals",
                       subtitle: "Manage your goals",
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => GoalListScreen(),
+                        ),
+                      ),
                     ),
+
                     ToolCard(
                       icon: Icons.account_balance_wallet,
                       color: const Color(0xFFF6AD55),
@@ -305,6 +315,12 @@ class _HomePageState extends State<HomeScreen> {
                       color: Colors.green,
                       title: "Alerts",
                       subtitle: "Bill reminders",
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => NotificationsScreen(),
+                        ),
+                      ),
                     ),
                   ],
                 ),

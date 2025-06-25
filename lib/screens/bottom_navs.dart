@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:cashcare/models/navbar_provider.dart';
 import 'package:cashcare/screens/history.dart';
+import 'package:cashcare/screens/notification_screen.dart';
 import 'package:cashcare/screens/profile.dart' show ProfileScreen;
 import 'package:cashcare/screens/receipt_scan.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +13,7 @@ import '../screens/home_screen.dart';
 class BottomNavbar extends StatelessWidget {
   final List<Widget> _pages = [
     HomeScreen(), // 0
-    Container(child: Center(child: Text('Goals screen'))), // 1
+    NotificationsScreen(), // 1
     PlaceTypeView(),
     ProfileScreen(), // 3
   ];
@@ -86,7 +87,7 @@ class BottomNavbar extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       _buildNavItem(IconlyBold.home, 0, context),
-                      _buildNavItem(IconlyBold.chart, 1, context),
+                      _buildNavItem(IconlyBold.notification, 1, context),
                       SizedBox(width: 20), // Space for center button
                       _buildNavItem(Icons.history, 2, context),
                       _buildNavItem(Icons.person, 3, context),
@@ -104,6 +105,7 @@ class BottomNavbar extends StatelessWidget {
   Widget _buildNavItem(IconData icon, int index, BuildContext context) {
     final navProvider = Provider.of<BottomNavProvider>(context);
     final isSelected = navProvider.currentIndex == index;
+    final hasUnread = index == 1 && navProvider.unreadNotificationCount > 0;
 
     return InkWell(
       onTap: () => navProvider.changeIndex(index),
@@ -113,17 +115,35 @@ class BottomNavbar extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              padding: EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: isSelected ? Color(0xFFE8F5E9) : Colors.transparent,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                icon,
-                color: isSelected ? Color(0xFF4CAF50) : Color(0xFFA5D6A7),
-                size: 20,
-              ),
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  padding: EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: isSelected ? Color(0xFFE8F5E9) : Colors.transparent,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    icon,
+                    color: isSelected ? Color(0xFF4CAF50) : Color(0xFFA5D6A7),
+                    size: 20,
+                  ),
+                ),
+                if (hasUnread)
+                  Positioned(
+                    top: -2,
+                    right: -2,
+                    child: Container(
+                      width: 12,
+                      height: 12,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+              ],
             ),
             if (isSelected)
               Container(
@@ -137,4 +157,5 @@ class BottomNavbar extends StatelessWidget {
       ),
     );
   }
+
 }
