@@ -10,6 +10,7 @@ import 'package:cashcare/services/auth_service.dart';
 import 'package:cashcare/utils/snackbar_service.dart' show SnackBarService;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:cashcare/services/google_auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -25,6 +26,8 @@ class _LoginPageState extends State<LoginPage> {
   final _authService = AuthService();
   bool _obscurePassword = true;
   bool _isLoading = false;
+  bool _isGoogleLoading = false;
+
 
   Future<void> _submit() async {
     if(!_formKey.currentState!.validate()) return;
@@ -92,6 +95,27 @@ class _LoginPageState extends State<LoginPage> {
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() => _isGoogleLoading = true);
+    try {
+      final result = await GoogleAuthService.signInWithGoogle();
+      if (result) {
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => HomeScreen()),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Google sign-in failed: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _isGoogleLoading = false);
     }
   }
 
