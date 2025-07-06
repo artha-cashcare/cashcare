@@ -4,6 +4,7 @@ import 'package:cashcare/screens/edit_profile.dart';
 import 'package:cashcare/services/auth_interceptor.dart';
 import 'package:cashcare/services/auth_service.dart';
 import 'package:cashcare/services/income_expense_services.dart';
+import 'package:cashcare/widgets/homescreen_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_iconly/flutter_iconly.dart';
@@ -24,6 +25,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   double savings = 0.0;
   double savingsRate = 0.0;
   bool isLoadingFinancialData = false;
+  bool isLoading =true;
 
 
   @override
@@ -38,6 +40,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _fetchFinancialData() async {
     setState(() {
       isLoadingFinancialData = true;
+
     });
 
     try {
@@ -57,6 +60,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } finally {
       setState(() {
         isLoadingFinancialData = false;
+        isLoading = false;
       });
     }
   }
@@ -112,8 +116,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             actions: [
               Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: IconButton(onPressed: (){_logout(context);}, icon: Icon(Icons.logout))
+                  padding: const EdgeInsets.all(8.0),
+                  child: IconButton(onPressed: (){_logout(context);}, icon: Icon(Icons.logout))
               ),
             ],
             bottom: PreferredSize(
@@ -125,7 +129,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           body: SafeArea(
-            child: SingleChildScrollView(
+            child:isLoading? Center(child: FloatingDotLoading(),):
+
+            SingleChildScrollView(
               child: ConstrainedBox(
                 constraints: BoxConstraints(
                   minHeight: MediaQuery.of(context).size.height,
@@ -213,8 +219,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Text(
                                 '$firstName $lastName',
                                 style: TextStyle(
-                                  fontSize: 25,
-                                  fontWeight: FontWeight.w500,fontFamily: 'Poppins'
+                                    fontSize: 25,
+                                    fontWeight: FontWeight.w500,fontFamily: 'Poppins'
                                 ),
                               ),
                               SizedBox(height: 10),
@@ -343,8 +349,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Text(
                 text,
                 style: TextStyle(
-                  fontSize: 17,
-                  color: Colors.grey.shade700,fontFamily: 'Poppins'
+                    fontSize: 17,
+                    color: Colors.grey.shade700,fontFamily: 'Poppins'
                 ),
               ),
             ),

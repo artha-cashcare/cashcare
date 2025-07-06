@@ -110,24 +110,7 @@ class _GoalListScreenState extends State<GoalListScreen> {
             ),
           ),
           SizedBox(height: 24),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => GoalCreationForm()),
-              );
-            },
-            child: Text(
-              'Create Goal',
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
+
         ],
       ),
     );

@@ -1,10 +1,13 @@
 import 'dart:convert';
+import 'package:cashcare/services/auth_interceptor.dart';
 import 'package:http/http.dart' as http;
 
 class StatsService {
-  final String baseUrl = 'http://127.0.0.1:8000/api/stats'; 
+  final String baseUrl = 'http://10.0.2.2:8000/stats';
 
-  Future<Map<String, dynamic>> fetchMonthlyStats(String token) async {
+  Future<Map<String, dynamic>> fetchMonthlyStats() async {
+    final token = await AuthInterceptor.getValidAccessToken();
+
     final response = await http.get(
       Uri.parse('$baseUrl/monthly/'),
       headers: {'Authorization': 'Bearer $token'},
@@ -13,11 +16,13 @@ class StatsService {
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Failed to load monthly stats');
+      throw Exception('Failed to load monthly stats: ${response.body}');
     }
   }
 
-  Future<Map<String, dynamic>> fetchCategoryStats(String token) async {
+  Future<Map<String, dynamic>> fetchCategoryStats() async {
+    final token = await AuthInterceptor.getValidAccessToken();
+
     final response = await http.get(
       Uri.parse('$baseUrl/category/'),
       headers: {'Authorization': 'Bearer $token'},
@@ -26,7 +31,7 @@ class StatsService {
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Failed to load category stats');
+      throw Exception('Failed to load category stats: ${response.body}');
     }
   }
 }

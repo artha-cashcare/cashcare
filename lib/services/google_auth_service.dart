@@ -1,44 +1,31 @@
 import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 
 class GoogleAuthService {
-  static final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+  // FlutterSecureStorage instance
+  static final _secureStorage = const FlutterSecureStorage();
+
+  // Google Sign-In config
+  static final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: ['email'],
+    serverClientId: '883174720862-sat6t1umo7e8q6c9nan8lgih4t28d8pc.apps.googleusercontent.com',
+  );
 
   static Future<bool> signInWithGoogle() async {
     try {
-      // Initialize with your client IDs
-      await _googleSignIn.initialize(
-        clientId: '', // your iOS client id if any or empty
-        serverClientId: '169167485751-b53dcjaa0bi7mugheioelt7sipboodbf.apps.googleusercontent.com',
-      );
+      await _googleSignIn.signOut(); // optional: always pick account
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) return false;
 
-      // Sign out first (optional)
-      await _googleSignIn.signOut();
-
-      // Listen for authentication events (optional)
-      _googleSignIn.authenticationEvents.listen((event) {
-        // handle events like sign in/out here if you want
-      });
-
-      // Attempt lightweight authentication (optional)
-      await _googleSignIn.attemptLightweightAuthentication();
-
-      // Then start sign-in flow
-      final GoogleSignInAccount? user = await _googleSignIn.authenticate();
-
-      if (user == null) return false;
-
-      final GoogleSignInAuthentication auth = await user.authentication;
-
-      final idToken = auth.idToken;
-
-      if (idToken == null) {
-        throw Exception('Google ID token is null');
-      }
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final idToken = googleAuth.idToken;
+      if (idToken == null) throw Exception('Google ID token is null');
 
       print("ID Token: $idToken");
 
+      // Send to your Django backend
       final response = await http.post(
         Uri.parse('http://10.0.2.2:8000/api/auth/google/'),
         headers: {'Content-Type': 'application/json'},
@@ -48,15 +35,30 @@ class GoogleAuthService {
       print("Status: ${response.statusCode}");
       print("Response: ${response.body}");
 
-
       if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+
+        // ✅ Store access and refresh token securely
+        await _secureStorage.write(key: 'access_token', value: responseData['access']);
+        await _secureStorage.write(key: 'refresh_token', value: responseData['refresh']);
+
         return true;
       } else {
         throw Exception('Backend error: ${response.body}');
       }
     } catch (e) {
-      print('Google Sign-In Error: $e');
+      print("Google Sign-In Error: $e");
       throw Exception('Google sign-in error: $e');
     }
+  }
+
+  // Optional: Helper to fetch token
+  static Future<String?> getAccessToken() async {
+    return await _secureStorage.read(key: 'access_token');
+  }
+
+  static Future<void> logout() async {
+    await _googleSignIn.signOut();
+    await _secureStorage.deleteAll(); // clear tokens
   }
 }

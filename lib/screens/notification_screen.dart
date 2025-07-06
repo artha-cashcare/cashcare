@@ -1,6 +1,7 @@
 import 'package:cashcare/models/goal_notification.dart';
 import 'package:cashcare/models/navbar_provider.dart';
 import 'package:cashcare/services/notification_service.dart';
+import 'package:cashcare/widgets/homescreen_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -75,7 +76,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         future: _notificationsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: FloatingDotLoading(
+
+            ));
           } else if (snapshot.hasError) {
             return Center(child: Text('Error loading notifications'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {

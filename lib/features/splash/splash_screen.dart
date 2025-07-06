@@ -1,4 +1,5 @@
 import 'package:cashcare/auth/signup_screen.dart';
+import 'package:cashcare/screens/PredictionPage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 

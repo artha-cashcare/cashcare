@@ -1,10 +1,12 @@
 import 'package:cashcare/auth/login_screen.dart';
 import 'package:cashcare/features/goals/goal_list_screen.dart';
+import 'package:cashcare/features/sms_parsing/screens/sms_uploader_screen.dart';
 import 'package:cashcare/screens/add_expense.dart';
 import 'package:cashcare/screens/add_income.dart';
 import 'package:cashcare/screens/home_screen.dart';
 import 'package:cashcare/screens/notification_screen.dart';
 import 'package:cashcare/screens/receipt_scan.dart';
+import 'package:cashcare/screens/stats_screen.dart';
 import 'package:cashcare/services/auth_service.dart';
 import 'package:cashcare/services/income_expense_services.dart';
 import 'package:cashcare/services/profile_service.dart';
@@ -304,16 +306,22 @@ class _HomePageState extends State<HomeScreen> {
                       color: const Color(0xFFF6AD55),
                       title: "Prediction",
                       subtitle: "Control your money",
-                    ),
-                    ToolCard(
-                      icon: Icons.notifications,
-                      color: Colors.green,
-                      title: "Alerts",
-                      subtitle: "Bill reminders",
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => NotificationsScreen(),
+                          builder: (context) => StatsScreen(),
+                        ),
+                      )
+                    ),
+                    ToolCard(
+                      icon: Icons.list_alt,
+                      color: Colors.green,
+                      title: "Parse SMS",
+                      subtitle: "Finance Extractor",
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => SmsUploaderScreen(),
                         ),
                       ),
                     ),

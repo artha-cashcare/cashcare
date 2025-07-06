@@ -1,12 +1,8 @@
 import 'package:cashcare/services/stats_services.dart';
 import 'package:cashcare/widgets/barchart_widget.dart';
 import 'package:flutter/material.dart';
-
-
+import 'monthly_detail_screen.dart';
 class StatsScreen extends StatefulWidget {
-  final String token;
-  const StatsScreen({required this.token});
-
   @override
   State<StatsScreen> createState() => _StatsScreenState();
 }
@@ -14,6 +10,7 @@ class StatsScreen extends StatefulWidget {
 class _StatsScreenState extends State<StatsScreen> {
   final statsService = StatsService();
   late Future<void> _fetchFuture;
+  bool _showIncome = true;
 
   List<dynamic> monthlyIncome = [];
   List<dynamic> monthlyExpense = [];
@@ -27,8 +24,8 @@ class _StatsScreenState extends State<StatsScreen> {
   }
 
   Future<void> _fetchStats() async {
-    final monthly = await statsService.fetchMonthlyStats(widget.token);
-    final category = await statsService.fetchCategoryStats(widget.token);
+    final monthly = await statsService.fetchMonthlyStats();
+    final category = await statsService.fetchCategoryStats();
 
     setState(() {
       monthlyIncome = monthly['income'];
@@ -41,7 +38,25 @@ class _StatsScreenState extends State<StatsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Income & Expense Stats')),
+      appBar: AppBar(
+        title: Text('Income & Expense Stats'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.compare),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => MonthlyComparisonScreen(
+                    monthlyIncome: monthlyIncome,
+                    monthlyExpense: monthlyExpense,
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
       body: FutureBuilder(
         future: _fetchFuture,
         builder: (context, snapshot) {
@@ -53,8 +68,40 @@ class _StatsScreenState extends State<StatsScreen> {
             padding: EdgeInsets.all(16),
             child: Column(
               children: [
-                Text("📅 Monthly Comparison", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                SizedBox(height: 300, child: buildMonthlyChart(monthlyIncome, monthlyExpense)),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "📅 Monthly Overview",
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    ToggleButtons(
+                      isSelected: [_showIncome, !_showIncome],
+                      onPressed: (index) {
+                        setState(() {
+                          _showIncome = index == 0;
+                        });
+                      },
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          child: Text("Income", style: TextStyle(color: Colors.green)),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          child: Text("Expense", style: TextStyle(color: Colors.red)),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                SizedBox(height: 16),
+                SizedBox(
+                  height: 300,
+                  child: _showIncome
+                      ? buildSingleBarChart(monthlyIncome, Colors.green)
+                      : buildSingleBarChart(monthlyExpense, Colors.red),
+                ),
                 SizedBox(height: 32),
 
                 Text("📊 Income by Category", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),

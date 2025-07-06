@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:cashcare/services/auth_interceptor.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://13.60.63.203:8000';
+  static const String baseUrl = 'http://10.0.2.2:8000';
 
 
   Future<String> _getAuthToken() async {

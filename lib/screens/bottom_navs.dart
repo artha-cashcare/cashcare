@@ -11,6 +11,9 @@ import '../screens/home_screen.dart';
 
 
 class BottomNavbar extends StatelessWidget {
+  final Map<String, dynamic>? userData;
+
+  BottomNavbar({Key? key,this.userData}) : super(key: key);
   final List<Widget> _pages = [
     HomeScreen(),
     NotificationsScreen(),

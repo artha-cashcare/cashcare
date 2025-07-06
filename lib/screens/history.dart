@@ -1,4 +1,5 @@
 import 'package:cashcare/services/income_expense_history.dart';
+import 'package:cashcare/widgets/homescreen_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:cashcare/models/history.dart';
@@ -94,7 +95,7 @@ class PremiumTransactionList extends StatefulWidget {
   final TransactionType? filter;
   final ApiService apiService = ApiService();
 
-   PremiumTransactionList({Key? key, this.filter}) : super(key: key);
+  PremiumTransactionList({Key? key, this.filter}) : super(key: key);
 
   @override
   _PremiumTransactionListState createState() => _PremiumTransactionListState();
@@ -142,7 +143,7 @@ class _PremiumTransactionListState extends State<PremiumTransactionList> {
     return Container(
       color: Colors.grey[50],
       child: _isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? Center(child: FloatingDotLoading())
           : FutureBuilder<List<TransactionModel>>(
         future: _transactionsFuture,
         builder: (context, snapshot) {
@@ -151,7 +152,7 @@ class _PremiumTransactionListState extends State<PremiumTransactionList> {
           }
 
           if (!snapshot.hasData) {
-            return Center(child: CircularProgressIndicator());
+            return Center(child: FloatingDotLoading());
           }
 
           final filtered = _filterTransactions(snapshot.data!);
