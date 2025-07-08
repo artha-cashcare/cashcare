@@ -1,4 +1,5 @@
 import 'package:cashcare/auth/login_screen.dart';
+import 'package:cashcare/features/Insights/screens/dashboard_screen.dart';
 import 'package:cashcare/features/goals/goal_list_screen.dart';
 import 'package:cashcare/features/sms_parsing/screens/sms_uploader_screen.dart';
 import 'package:cashcare/screens/add_expense.dart';
@@ -25,7 +26,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomePageState extends State<HomeScreen> {
   final AuthService _authService = AuthService();
-  String userName = 'Lokraj';
+  String userName = '';
   bool isAmountVisible = true;
   bool isLoading = true;
 
@@ -324,6 +325,18 @@ class _HomePageState extends State<HomeScreen> {
                           builder: (context) => SmsUploaderScreen(),
                         ),
                       ),
+                    ),
+                    ToolCard(
+                        icon: Icons.insights,
+                        color: Colors.indigo,
+                        title: "Insights",
+                        subtitle: "Track Compare Improve",
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => InsighScreen(),
+                          ),
+                        )
                     ),
                   ],
                 ),

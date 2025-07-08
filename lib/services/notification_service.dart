@@ -4,7 +4,7 @@ import 'package:cashcare/services/auth_interceptor.dart';
 import 'package:http/http.dart' as http;
 
 class NotificationService {
-  final String baseUrl = 'http://10.0.2.2:8000';
+  final String baseUrl = 'http://13.60.63.203:8000';
 
   Future<String> _getAuthToken() async {
     final token = await AuthInterceptor.getValidAccessToken();

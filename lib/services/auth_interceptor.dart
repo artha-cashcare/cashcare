@@ -5,7 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AuthInterceptor {
   static const FlutterSecureStorage _storage = FlutterSecureStorage();
-  static const String baseUrl = 'http://10.0.2.2:8000';
+  static const String baseUrl = 'http://13.60.63.203:8000';
 
 
   static Future<String?> getValidAccessToken() async {

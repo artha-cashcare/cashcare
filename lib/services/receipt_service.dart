@@ -5,7 +5,7 @@ import 'package:http_parser/http_parser.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 class ReceiptService {
-  static const String _baseUrl = 'http://10.0.2.2:8000/api';
+  static const String _baseUrl = 'http://13.60.63.203:8000/api';
   final  authToken=AuthInterceptor.getValidAccessToken();
 
   Future<bool> uploadReceipt({

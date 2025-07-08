@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cashcare/models/navbar_provider.dart';
 import 'package:cashcare/providers/profile_provider.dart';
 import 'package:cashcare/screens/bottom_navs.dart' show BottomNavbar;
@@ -9,8 +11,18 @@ import 'package:cashcare/screens/home_screen.dart';
 import 'package:cashcare/auth/login_screen.dart';
 import 'package:cashcare/features/splash/splash_screen.dart';
 
+class MyHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    return super.createHttpClient(context)
+    // This line disables SSL certificate verification:
+      ..badCertificateCallback = (cert, host, port) => true;
+  }
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  HttpOverrides.global = MyHttpOverrides();
   runApp(MyApp());
 }
 

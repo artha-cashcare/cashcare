@@ -39,9 +39,9 @@ android {
     buildTypes {
         getByName("release") {
             signingConfig = signingConfigs.getByName("debug")
-            isShrinkResources = false
-            isMinifyEnabled = false
-            isCrunchPngs = false
+            isShrinkResources = false     // enable resource shrinking
+            isMinifyEnabled = false       // enable code shrinking
+            isCrunchPngs = false         // optional: disables PNG crunching
 
             // For release signing (when ready):
             // signingConfig = signingConfigs.getByName("release")

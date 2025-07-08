@@ -3,7 +3,7 @@ import 'package:cashcare/services/auth_interceptor.dart';
 import 'package:http/http.dart' as http;
 
 class StatsService {
-  final String baseUrl = 'http://10.0.2.2:8000/stats';
+  final String baseUrl = 'http://13.60.63.203:8000/stats';
 
   Future<Map<String, dynamic>> fetchMonthlyStats() async {
     final token = await AuthInterceptor.getValidAccessToken();

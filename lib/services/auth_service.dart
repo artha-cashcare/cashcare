@@ -6,10 +6,10 @@ import 'package:http/http.dart' as http;
 
 class AuthService {
   final _storage = const FlutterSecureStorage();
-  final String baseUrl = 'http://10.0.2.2:8000/api/auth';
+  final String baseUrl = 'http://13.60.63.203:8000/api/auth';
   // final String baseUrl = 'http://192.168.1.66:8000/api/auth';
 
-  static const String _baseUrls = 'http://10.0.2.2:8000/api';
+  static const String _baseUrls = 'http://13.60.63.203:8000/api';
   // static const String _baseUrls = 'http://192.168.1.70:8000/api';
 
 
