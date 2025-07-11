@@ -1,6 +1,7 @@
 import 'package:cashcare/auth/login_screen.dart';
 import 'package:cashcare/features/Insights/screens/dashboard_screen.dart';
 import 'package:cashcare/features/goals/goal_list_screen.dart';
+import 'package:cashcare/features/pdf_generator/report_screen.dart';
 import 'package:cashcare/features/sms_parsing/screens/sms_uploader_screen.dart';
 import 'package:cashcare/screens/add_expense.dart';
 import 'package:cashcare/screens/add_income.dart';
@@ -310,7 +311,7 @@ class _HomePageState extends State<HomeScreen> {
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => StatsScreen(),
+                          builder: (context) => ReportScreen(),
                         ),
                       )
                     ),
