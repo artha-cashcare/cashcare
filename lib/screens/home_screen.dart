@@ -3,6 +3,7 @@ import 'package:cashcare/features/Insights/screens/dashboard_screen.dart';
 import 'package:cashcare/features/goals/goal_list_screen.dart';
 import 'package:cashcare/features/pdf_generator/report_screen.dart';
 import 'package:cashcare/features/sms_parsing/screens/sms_uploader_screen.dart';
+import 'package:cashcare/function/esewa.dart';
 import 'package:cashcare/screens/add_expense.dart';
 import 'package:cashcare/screens/add_income.dart';
 import 'package:cashcare/screens/home_screen.dart';
@@ -306,8 +307,8 @@ class _HomePageState extends State<HomeScreen> {
                     ToolCard(
                       icon: Icons.account_balance_wallet,
                       color: const Color(0xFFF6AD55),
-                      title: "Prediction",
-                      subtitle: "Control your money",
+                      title: "Monthly Report",
+                      subtitle: "Your statement Analysis",
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -338,6 +339,15 @@ class _HomePageState extends State<HomeScreen> {
                             builder: (context) => InsighScreen(),
                           ),
                         )
+                    ),
+                    ToolCard(
+                        icon: Icons.account_balance_wallet,
+                        color: const Color(0xFFF6AD55),
+                        title: "Prediction",
+                        subtitle: "Control your money",
+                      onTap: (){Esewa esewa=Esewa();
+                          esewa.startEsewaPayment();
+                          },
                     ),
                   ],
                 ),

@@ -38,7 +38,6 @@ class GoogleAuthService {
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
 
-        // ✅ Store access and refresh token securely
         await _secureStorage.write(key: 'access_token', value: responseData['access']);
         await _secureStorage.write(key: 'refresh_token', value: responseData['refresh']);
 

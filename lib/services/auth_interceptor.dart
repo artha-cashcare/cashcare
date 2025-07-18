@@ -54,6 +54,7 @@ class AuthInterceptor {
       body: jsonEncode({'refresh': refreshToken}),
     );
 
+
     if (response.statusCode == 200) {
       final newData = jsonDecode(response.body);
       await _storage.write(key: 'access_token', value: newData['access']);

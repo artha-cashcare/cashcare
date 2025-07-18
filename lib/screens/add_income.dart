@@ -57,6 +57,7 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
           SnackBar(content: Text('Please enter a valid amount')),
         );
       }
+      
     }
   }
 

@@ -105,6 +105,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final profileImage = profile?['profile_image'] ??
             'https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcRzQbUNMS6JcPMKa7LJWV1SGxAh97jvFHxJT_RPNHbfZdARf4p5XVxNA1DAqAIvdL4nCN9sLGV8oOqekgGtfLrQZw';
 
+        final bool isVerified = profile?['is_verified'] ?? false;
+
         return Scaffold(
           backgroundColor: Colors.white,
           appBar: AppBar(
@@ -208,11 +210,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       ),
                                     ),
                                   ),
-                                  Positioned(
-                                    bottom: 1,
-                                    right: 5,
-                                    child: _buildVerifiedBadge(),
-                                  ),
+
+                                  if (isVerified)
+                                    Positioned(
+                                      bottom: 1,
+                                      right: 5,
+                                      child: _buildVerifiedBadge(),
+                                    )
+                                  else
+                                    SizedBox.shrink(),
                                 ],
                               ),
                               SizedBox(height: 10),
@@ -224,7 +230,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                               ),
                               SizedBox(height: 10),
-                              _buildPremiumBadge(),
+                              _buildPremiumBadge(isVerified),
                               SizedBox(height: 15),
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
@@ -309,34 +315,77 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildPremiumBadge() {
-    return Container(
-      width: 170,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        color: Colors.green.shade700,
-      ),
-      child: Row(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Icon(
+  Widget _buildPremiumBadge(bool isVerified) {
+    if (isVerified) {
+      return Container(
+        width: 170,
+        padding: EdgeInsets.symmetric(vertical: 6),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          gradient: LinearGradient(
+            colors: [Colors.green.shade700, Colors.green.shade900],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.green.shade900.withOpacity(0.6),
+              blurRadius: 8,
+              offset: Offset(0, 3),
+            )
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
               Icons.star,
               color: Colors.amberAccent,
-              size: 17,
+              size: 20,
             ),
-          ),
-          Text(
-            'PREMIUM MEMBER',
+            SizedBox(width: 6),
+            Text(
+              'PREMIUM MEMBER',
+              style: TextStyle(
+                color: Colors.amberAccent,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                shadows: [
+                  Shadow(
+                    color: Colors.black45,
+                    blurRadius: 4,
+                    offset: Offset(1, 1),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      return Container(
+        width: 170,
+        padding: EdgeInsets.symmetric(vertical: 6),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: Colors.grey.shade300,
+          border: Border.all(color: Colors.grey.shade600),
+        ),
+        child: Center(
+          child: Text(
+            'STANDARD USER',
             style: TextStyle(
-              color: Colors.amberAccent,
-              fontWeight: FontWeight.bold,
+              color: Colors.grey.shade800,
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
             ),
           ),
-        ],
-      ),
-    );
+        ),
+      );
+    }
   }
+
+
 
   Widget _buildDetailRow(IconData icon, String text) {
     return Column(

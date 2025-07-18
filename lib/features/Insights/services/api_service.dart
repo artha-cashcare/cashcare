@@ -7,7 +7,7 @@ import '../models/monthly_data.dart';
 import '../models/recommendation.dart';
 import 'package:cashcare/utils/token_helper.dart';
 class ApiService {
-  static const String baseUrl = 'http://13.60.63.203:8000';
+  static const String baseUrl = 'http://10.0.2.2:8000';
 
   final headers =  TokenService.getAuthToken();
 

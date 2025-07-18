@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import '../models/goal_model.dart';
 
 class GoalService {
-  final String baseUrl='http://13.60.63.203:8000';
+  final String baseUrl='http://10.0.2.2:8000';
 
 
   Future<List<Goal>> getGoals() async {
