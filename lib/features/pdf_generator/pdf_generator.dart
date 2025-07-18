@@ -7,83 +7,213 @@ import 'package:printing/printing.dart';
 class PdfGenerator {
   static Future<void> generateMonthlyPdf(Map<String, dynamic> data) async {
     final pdf = pw.Document();
+    final pw.ImageProvider? logo = await _loadLogo();
 
-    pw.ImageProvider? logo;
-    try {
-      final logoData = await rootBundle.load('assets/images/logo.png');
-      logo = pw.MemoryImage(logoData.buffer.asUint8List());
-    } catch (_) {
-      logo = null;
-    }
+    const PdfColor primaryGreen = PdfColor.fromInt(0xFF1B5E20);
+    const PdfColor accentGreen = PdfColor.fromInt(0xFF4CAF50);
+    const PdfColor textColor = PdfColors.grey800;
+    const PdfColor lightTextColor = PdfColors.grey600;
+    const PdfColor borderColor = PdfColors.grey300;
 
-    final expenseBreakdown = data['breakdown'] as List<dynamic>;
-    final total = data['total_expenses'] as num;
-    final colorList = [
-      PdfColors.red,
-      PdfColors.green,
-      PdfColors.blue,
-      PdfColors.orange,
-      PdfColors.purple,
-      PdfColors.brown,
-    ];
+    final List<dynamic> reports = data['monthly_reports'] ?? [data];
 
     pdf.addPage(
       pw.MultiPage(
-        margin: const pw.EdgeInsets.all(24),
+        pageFormat: PdfPageFormat.a4.copyWith(
+          marginBottom: 36,
+          marginTop: 48,
+          marginLeft: 36,
+          marginRight: 36,
+        ),
         header: (ctx) => pw.Row(
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           children: [
-            if (logo != null) pw.Image(logo, width: 40),
+            pw.Row(
+              children: [
+                if (logo != null)
+                  pw.Container(
+                    margin: const pw.EdgeInsets.only(right: 10),
+                    height: 50,
+                    width: 50,
+                    child: pw.Image(logo),
+                  ),
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text(
+                      'CashCare Insights',
+                      style: pw.TextStyle(
+                        fontSize: 24,
+                        fontWeight: pw.FontWeight.bold,
+                        color: primaryGreen,
+                      ),
+                    ),
+                    pw.Text(
+                      'Financial Overview Report',
+                      style: pw.TextStyle(fontSize: 12, color: lightTextColor),
+                    ),
+                  ],
+                ),
+              ],
+            ),
             pw.Text(
-              'CashCare Report - ${data["month"]}',
-              style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+              'Date: ${DateTime.now().toLocal().toString().split(' ')[0]}',
+              style: pw.TextStyle(fontSize: 10, color: lightTextColor),
             ),
           ],
         ),
+        footer: (ctx) => pw.Text(
+          'Page ${ctx.pageNumber} of ${ctx.pagesCount}',
+          style: pw.TextStyle(fontSize: 10, color: lightTextColor),
+        ),
         build: (context) => [
-          pw.SizedBox(height: 12),
-          pw.Text('📅 Monthly Summary', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
-          pw.SizedBox(height: 6),
-          pw.Text('Income: Rs ${data["total_income"]}'),
-          pw.Text('Expenses: Rs ${data["total_expenses"]}'),
-          pw.Text('Remaining: Rs ${data["remaining"]}', style: pw.TextStyle(color: PdfColors.green800)),
-
-          pw.SizedBox(height: 20),
-          pw.Text('📊 Expense Breakdown:', style: pw.TextStyle(fontSize: 15, fontWeight: pw.FontWeight.bold)),
-          ...List.generate(expenseBreakdown.length, (i) {
-            final item = expenseBreakdown[i];
-            final percent = (item["amount"] / total) * 100;
-            return pw.Row(
-              children: [
-                pw.Container(width: 10, height: 10, color: colorList[i % colorList.length]),
-                pw.SizedBox(width: 8),
-                pw.Text('${item["category"]}: Rs ${item["amount"]} (${percent.toStringAsFixed(1)}%)'),
+          pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              for (final monthData in reports) ...[
+                _buildSectionTitle("Report Summary for ${monthData['month'] ?? monthData['quarter'] ?? monthData['year'] ?? 'Selected Period'}", primaryGreen),
+                pw.SizedBox(height: 15),
+                _buildSummaryCards(
+                  monthData['total_income'] ?? 0,
+                  monthData['total_expenses'] ?? 0,
+                  monthData['remaining'] ?? 0,
+                  primaryGreen,
+                  accentGreen,
+                ),
+                pw.SizedBox(height: 25),
+                _buildSectionTitle('Expense Breakdown', primaryGreen),
+                pw.SizedBox(height: 15),
+                _buildExpenseBreakdown(
+                  monthData['breakdown'] as List<dynamic>?,
+                  monthData['total_expenses'] ?? 0,
+                  textColor,
+                ),
+                pw.SizedBox(height: 25),
+                _buildSectionTitle('Top Transactions', primaryGreen),
+                pw.SizedBox(height: 15),
+                _buildTransactionsTable(
+                  monthData["top_transactions"] as List<dynamic>?,
+                  primaryGreen,
+                  textColor,
+                  borderColor,
+                ),
+                pw.SizedBox(height: 30),
+                if (reports.indexOf(monthData) < reports.length - 1)
+                  pw.NewPage(),
               ],
-            );
-          }),
-
-          pw.SizedBox(height: 20),
-          pw.Text('💸 Top Transactions:', style: pw.TextStyle(fontSize: 15, fontWeight: pw.FontWeight.bold)),
-          pw.SizedBox(height: 6),
-          pw.Table.fromTextArray(
-            headers: ['Title', 'Amount', 'Date'],
-            data: List<List<String>>.from(data["top_transactions"].map((txn) => [
-              txn["title"].toString(),
-              "Rs ${txn["amount"]}",
-              txn["date"].toString()
-            ])),
-            border: pw.TableBorder.all(),
-            headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-            cellAlignment: pw.Alignment.centerLeft,
+            ],
           ),
         ],
       ),
     );
 
-    await Printing.sharePdf(
-      bytes: await pdf.save(),
-      filename: 'CashCare_Report_${data["month"]}.pdf',
-    );
+    final fileName = "CashCare_Report_${data['month'] ?? data['quarter'] ?? data['year'] ?? 'Period'}.pdf";
+    await Printing.sharePdf(bytes: await pdf.save(), filename: fileName);
+  }
 
+  static pw.Widget _buildSectionTitle(String title, PdfColor color) {
+    return pw.Container(
+      decoration: pw.BoxDecoration(border: pw.Border(left: pw.BorderSide(color: color, width: 5))),
+      padding: const pw.EdgeInsets.only(left: 10, bottom: 5),
+      child: pw.Text(
+        title,
+        style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold, color: color),
+      ),
+    );
+  }
+
+  static pw.Widget _buildSummaryCards(
+      double income, double expenses, double remaining, PdfColor primaryColor, PdfColor accentColor) {
+    return pw.Row(
+      mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
+      children: [
+        _buildSummaryCard('Total Income', 'Rs ${income.toStringAsFixed(2)}', primaryColor, PdfColors.green),
+        _buildSummaryCard('Total Expenses', 'Rs ${expenses.toStringAsFixed(2)}', primaryColor, PdfColors.red),
+        _buildSummaryCard('Net Remaining', 'Rs ${remaining.toStringAsFixed(2)}', primaryColor, accentColor),
+      ],
+    );
+  }
+
+  static pw.Widget _buildSummaryCard(String title, String value, PdfColor primaryColor, PdfColor valueColor) {
+    return pw.Expanded(
+      child: pw.Container(
+        margin: const pw.EdgeInsets.symmetric(horizontal: 5),
+        padding: const pw.EdgeInsets.all(15),
+        decoration: pw.BoxDecoration(
+          color: PdfColors.white,
+          borderRadius: pw.BorderRadius.circular(8),
+          boxShadow: [
+            pw.BoxShadow(color: PdfColors.grey200, blurRadius: 5, offset: const PdfPoint(0, 2)),
+          ],
+        ),
+        child: pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.center,
+          children: [
+            pw.Text(title, style: pw.TextStyle(fontSize: 12, color: primaryColor, fontWeight: pw.FontWeight.bold)),
+            pw.SizedBox(height: 8),
+            pw.Text(value, style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold, color: valueColor)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static pw.Widget _buildExpenseBreakdown(
+      List<dynamic>? breakdown, double totalExpenses, PdfColor textColor) {
+    if (breakdown == null || breakdown.isEmpty) {
+      return pw.Text('No expenses recorded for breakdown.', style: pw.TextStyle(color: textColor));
+    }
+
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: breakdown.map((item) {
+        final amount = item['amount'] ?? 0;
+        final percentage = totalExpenses > 0 ? (amount / totalExpenses) * 100 : 0;
+        return pw.Padding(
+          padding: const pw.EdgeInsets.symmetric(vertical: 4),
+          child: pw.Text(
+            '${item['category']}: Rs ${amount.toStringAsFixed(2)} (${percentage.toStringAsFixed(1)}%)',
+            style: pw.TextStyle(fontSize: 11, color: textColor),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  static pw.Widget _buildTransactionsTable(
+      List<dynamic>? transactions, PdfColor primaryColor, PdfColor textColor, PdfColor borderColor) {
+    if (transactions == null || transactions.isEmpty) {
+      return pw.Text('No transactions recorded.', style: pw.TextStyle(color: textColor));
+    }
+
+    return pw.Table.fromTextArray(
+      headers: ['Title', 'Amount', 'Date'],
+      data: transactions.map((txn) => [
+        txn["title"].toString(),
+        "Rs ${txn["amount"].toStringAsFixed(2)}",
+        txn["date"].toString().split(' ')[0],
+      ]).toList(),
+      border: pw.TableBorder.all(color: borderColor, width: 1),
+      headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white, fontSize: 10),
+      headerDecoration: pw.BoxDecoration(color: primaryColor),
+      cellStyle: pw.TextStyle(fontSize: 9, color: textColor),
+      cellAlignment: pw.Alignment.centerLeft,
+      cellPadding: const pw.EdgeInsets.all(8),
+      columnWidths: {
+        0: const pw.FlexColumnWidth(3),
+        1: const pw.FlexColumnWidth(2),
+        2: const pw.FlexColumnWidth(2),
+      },
+    );
+  }
+
+  static Future<pw.ImageProvider?> _loadLogo() async {
+    try {
+      final logoData = await rootBundle.load('assets/images/logo.png');
+      return pw.MemoryImage(logoData.buffer.asUint8List());
+    } catch (e) {
+      print('Error loading logo: $e');
+      return null;
+    }
   }
 }

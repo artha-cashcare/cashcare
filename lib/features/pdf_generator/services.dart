@@ -1,18 +1,19 @@
 import 'dart:convert';
 import 'package:cashcare/utils/token_helper.dart';
 import 'package:http/http.dart' as http;
-final headers =  TokenService.getAuthToken();
 
 class ApiService {
-  static Future<Map<String, dynamic>?> fetchMonthlySummary(String month) async {
-    final url = Uri.parse("http://192.168.1.68:8000/monthly-summary/?month=$month");
+  static Future<Map<String, dynamic>?> fetchSummary(Map<String, String> queryParams) async {
+    final token = await TokenService.getAuthToken();
+    final uri = Uri.http("192.168.1.69:8000", "/monthly-summary/", queryParams);
 
-    final response = await http.get(url, headers: await headers);
+    final response = await http.get(uri, headers: token);
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
       print("Error fetching summary: ${response.statusCode}");
+      print("Response body: ${response.body}");
       return null;
     }
   }
