@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cashcare/models/goal_model.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter_iconly/flutter_iconly.dart';
 import 'package:intl/intl.dart';
 
 class GoalDetailScreen extends StatelessWidget {
@@ -20,9 +21,20 @@ class GoalDetailScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Color(0xFFF5F7FA),
       appBar: AppBar(
-        title: Text('Goal Details', style: TextStyle(color: Colors.white)),
-        backgroundColor: Color(0xFF4CAF50),
+        backgroundColor: Colors.white,
+        elevation: 0,
         centerTitle: true,
+        title: Text('Goal Details',
+          style: TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.w600,
+              fontSize: 20,fontFamily: 'poppins'
+          ),
+        ),
+        leading: IconButton(
+          icon: Icon(IconlyBold.arrowLeftSquare, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16),
@@ -41,8 +53,8 @@ class GoalDetailScreen extends StatelessWidget {
 
             SizedBox(height: 16),
             _infoCard(
-              title: 'Target Amount: ₹${goal.targetAmount.toStringAsFixed(0)}',
-              subtitle: 'Saved: ₹${goal.currentAmount.toStringAsFixed(0)}',
+              title: 'Target Amount: Rs.${goal.targetAmount.toStringAsFixed(0)}',
+              subtitle: 'Saved: Rs.${goal.currentAmount.toStringAsFixed(0)}',
               icon: Icons.savings,
               color: Colors.indigo,
             ),
@@ -50,10 +62,10 @@ class GoalDetailScreen extends StatelessWidget {
             _infoCard(
               title: isOverdue
                   ? 'Deadline Passed'
-                  : 'Daily Target: ₹${dailyTarget.toStringAsFixed(2)}',
+                  : 'Daily Target: Rs.${dailyTarget.toStringAsFixed(2)}',
               subtitle: isOverdue
                   ? 'You missed the goal deadline.'
-                  : 'You need to save for $safeDaysLeft more day(s)',
+                  : 'You need to save within $safeDaysLeft more day(s)',
               icon: Icons.calendar_today,
               color: isOverdue ? Colors.red : Colors.orange,
             ),

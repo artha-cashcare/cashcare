@@ -1,11 +1,15 @@
 import 'dart:convert';
+import 'package:cashcare/constant/api_constant.dart';
 import 'package:cashcare/utils/token_helper.dart';
 import 'package:http/http.dart' as http;
 
 class ApiService {
+  static final baseUrl = ApiConstants.baseUrl;
+
   static Future<Map<String, dynamic>?> fetchSummary(Map<String, String> queryParams) async {
     final token = await TokenService.getAuthToken();
-    final uri = Uri.http("192.168.1.69:8000", "/monthly-summary/", queryParams);
+
+    final uri = Uri.parse("$baseUrl/monthly-summary/").replace(queryParameters: queryParams);
 
     final response = await http.get(uri, headers: token);
 

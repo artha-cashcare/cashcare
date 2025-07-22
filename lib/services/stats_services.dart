@@ -1,17 +1,18 @@
 import 'dart:convert';
+import 'package:cashcare/constant/api_constant.dart';
 import 'package:cashcare/services/auth_interceptor.dart';
 import 'package:http/http.dart' as http;
 
 class StatsService {
-  final String baseUrl = 'http://13.60.63.203:8000/stats';
+  static final baseUrl = ApiConstants.baseUrl;
 
   Future<Map<String, dynamic>> fetchMonthlyStats() async {
-    final token = await AuthInterceptor.getValidAccessToken();
-
-    final response = await http.get(
-      Uri.parse('$baseUrl/monthly/'),
-      headers: {'Authorization': 'Bearer $token'},
-    );
+    final response = await AuthInterceptor.authorizedRequest((token) async {
+      return await http.get(
+        Uri.parse('$baseUrl/stats/monthly/'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+    });
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
@@ -21,12 +22,12 @@ class StatsService {
   }
 
   Future<Map<String, dynamic>> fetchCategoryStats() async {
-    final token = await AuthInterceptor.getValidAccessToken();
-
-    final response = await http.get(
-      Uri.parse('$baseUrl/category/'),
-      headers: {'Authorization': 'Bearer $token'},
-    );
+    final response = await AuthInterceptor.authorizedRequest((token) async {
+      return await http.get(
+        Uri.parse('$baseUrl/stats/category/'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+    });
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);

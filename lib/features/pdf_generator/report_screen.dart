@@ -90,9 +90,11 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
         _showSnack("Report generated successfully!", Colors.green[700]!);
       } else {
         _showSnack("Failed to load data. Please try again.", Colors.red);
+
       }
     } catch (e) {
       _showSnack("Error: ${e.toString()}", Colors.red);
+      print(e);
     } finally {
       setState(() {
         _loading = false;

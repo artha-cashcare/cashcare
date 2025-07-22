@@ -7,6 +7,10 @@ class ProfileProvider with ChangeNotifier {
   Map<String, dynamic>? _profile;
   bool _loading = false;
 
+  bool get isVerified {
+    return _profile?['is_verified'] ?? false;
+  }
+
   Map<String, dynamic>? get profile => _profile;
   bool get loading => _loading;
 

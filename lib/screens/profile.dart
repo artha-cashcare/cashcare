@@ -1,4 +1,7 @@
 import 'package:cashcare/auth/login_screen.dart';
+import 'package:cashcare/features/account_options/about_us.dart';
+import 'package:cashcare/features/account_options/faqs.dart';
+import 'package:cashcare/features/account_options/terms&condition.dart';
 import 'package:cashcare/models/navbar_provider.dart';
 import 'package:cashcare/screens/edit_profile.dart';
 import 'package:cashcare/services/auth_interceptor.dart';
@@ -25,8 +28,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   double savings = 0.0;
   double savingsRate = 0.0;
   bool isLoadingFinancialData = false;
-  bool isLoading =true;
-
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -40,7 +42,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _fetchFinancialData() async {
     setState(() {
       isLoadingFinancialData = true;
-
     });
 
     try {
@@ -70,18 +71,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await _authService.logout();
       if (!mounted) return;
 
-      final navProvider = Provider.of<BottomNavProvider>(context, listen: false);
+      final navProvider = Provider.of<BottomNavProvider>(
+        context,
+        listen: false,
+      );
       navProvider.resetToHome();
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => LoginPage()),
-            (route) => false,
+        (route) => false,
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Logout failed: ${e.toString()}'))
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Logout failed: ${e.toString()}')));
     }
   }
 
@@ -102,8 +106,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final email = profile?['email'] ?? 'Not provided';
         final phone = profile?['phone'] ?? 'Not provided';
         final address = profile?['address'] ?? 'Not provided';
-        final profileImage = profile?['profile_image'] ??
-            'https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcRzQbUNMS6JcPMKa7LJWV1SGxAh97jvFHxJT_RPNHbfZdARf4p5XVxNA1DAqAIvdL4nCN9sLGV8oOqekgGtfLrQZw';
+        final profileImage =
+            profile?['profile_image'] ??
+            'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png';
 
         final bool isVerified = profile?['is_verified'] ?? false;
 
@@ -114,160 +119,250 @@ class _ProfileScreenState extends State<ProfileScreen> {
             backgroundColor: Colors.white,
             title: Text(
               'Account',
-              style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w600,
+              ),
             ),
             actions: [
               Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: IconButton(onPressed: (){_logout(context);}, icon: Icon(Icons.logout))
+                padding: const EdgeInsets.all(8.0),
+                child: IconButton(
+                  onPressed: () {
+                    _logout(context);
+                  },
+                  icon: Icon(Icons.logout),
+                ),
               ),
             ],
             bottom: PreferredSize(
               preferredSize: Size.fromHeight(0.0),
-              child: Container(
-                color: Colors.grey.shade500,
-                height: 1.0,
-              ),
+              child: Container(color: Colors.grey.shade500, height: 1.0),
             ),
           ),
           body: SafeArea(
-            child:isLoading? Center(child: FloatingDotLoading(),):
-
-            SingleChildScrollView(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: MediaQuery.of(context).size.height,
-                ),
-                child: IntrinsicHeight(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(15.0),
-                        child: Container(
-                          width: MediaQuery.of(context).size.width,
-                          padding: EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.3),
-                                spreadRadius: 2,
-                                blurRadius: 4,
-                                offset: Offset(0, 2),
-                              ),
-                            ],
-                          ),
+            child:
+                isLoading
+                    ? Center(child: FloatingDotLoading())
+                    : SingleChildScrollView(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: MediaQuery.of(context).size.height,
+                        ),
+                        child: IntrinsicHeight(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              Align(
-                                alignment: Alignment.topRight,
-                                child: GestureDetector(
-                                  onTap: () => Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => EditProfileScreen(),
-                                    ),
-                                  ),
-                                  child: Container(
-                                    height: 40,
-                                    width: 40,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(50),
-                                      color: Colors.green.shade50,
-                                    ),
-                                    child: Align(
-                                      alignment: Alignment.center,
-                                      child: Icon(IconlyBold.edit, color: Colors.green),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(height: 20),
-                              Stack(
-                                children: [
-                                  Container(
-                                    height: 120,
-                                    width: 120,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(100),
-                                      color: Colors.green.shade50,
-                                      border: Border.all(color: Colors.green, width: 5),
-                                    ),
-                                    child: Center(
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(100),
-                                        child: Image.network(
-                                          profileImage,
-                                          fit: BoxFit.cover,
-                                          height: 100,
-                                          width: 100,
-                                          errorBuilder: (context, error, stackTrace) =>
-                                              Icon(Icons.person, size: 60, color: Colors.green),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-
-                                  if (isVerified)
-                                    Positioned(
-                                      bottom: 1,
-                                      right: 5,
-                                      child: _buildVerifiedBadge(),
-                                    )
-                                  else
-                                    SizedBox.shrink(),
-                                ],
-                              ),
-                              SizedBox(height: 10),
-                              Text(
-                                '$firstName $lastName',
-                                style: TextStyle(
-                                    fontSize: 25,
-                                    fontWeight: FontWeight.w500,fontFamily: 'Poppins'
-                                ),
-                              ),
-                              SizedBox(height: 10),
-                              _buildPremiumBadge(isVerified),
-                              SizedBox(height: 15),
                               Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Align(
-                                  alignment: Alignment.centerLeft,
+                                padding: const EdgeInsets.all(15.0),
+                                child: Container(
+                                  width: MediaQuery.of(context).size.width,
+                                  padding: EdgeInsets.all(20),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(10),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.3),
+                                        spreadRadius: 2,
+                                        blurRadius: 4,
+                                        offset: Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
                                     children: [
-                                      _buildDetailRow(Icons.email_outlined, email),
-                                      _buildDetailRow(Icons.phone, phone),
-                                      _buildDetailRow(Icons.location_on_outlined, address),
-                                      SizedBox(height: 30),
-                                      Text(
-                                        'Financial Overview',
-                                        style: TextStyle(
-                                          color: Colors.black,
-                                          fontSize: 18.0,
-                                          fontWeight: FontWeight.bold,
+                                      Align(
+                                        alignment: Alignment.topRight,
+                                        child: GestureDetector(
+                                          onTap:
+                                              () => Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder:
+                                                      (context) =>
+                                                          EditProfileScreen(),
+                                                ),
+                                              ),
+                                          child: Container(
+                                            height: 40,
+                                            width: 40,
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(50),
+                                              color: Colors.green.shade50,
+                                            ),
+                                            child: Align(
+                                              alignment: Alignment.center,
+                                              child: Icon(
+                                                IconlyBold.edit,
+                                                color: Colors.green,
+                                              ),
+                                            ),
+                                          ),
                                         ),
                                       ),
-                                      SizedBox(height: 10),
-                                      _buildFinancialCard(),
                                       SizedBox(height: 20),
+                                      Stack(
+                                        children: [
+                                          Container(
+                                            height: 120,
+                                            width: 120,
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(100),
+                                              color: Colors.green.shade50,
+                                              border: Border.all(
+                                                color: Colors.green,
+                                                width: 5,
+                                              ),
+                                            ),
+                                            child: Center(
+                                              child: ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(100),
+                                                child: Image.network(
+                                                  profileImage,
+                                                  fit: BoxFit.cover,
+                                                  height: 100,
+                                                  width: 100,
+                                                  errorBuilder:
+                                                      (
+                                                        context,
+                                                        error,
+                                                        stackTrace,
+                                                      ) => Icon(
+                                                        Icons.person,
+                                                        size: 60,
+                                                        color: Colors.green,
+                                                      ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+
+                                          if (isVerified)
+                                            Positioned(
+                                              bottom: 1,
+                                              right: 5,
+                                              child: _buildVerifiedBadge(),
+                                            )
+                                          else
+                                            SizedBox.shrink(),
+                                        ],
+                                      ),
+                                      SizedBox(height: 10),
                                       Text(
-                                        'Account Options',
+                                        '$firstName $lastName',
                                         style: TextStyle(
-                                          color: Colors.black,
-                                          fontSize: 20.0,
-                                          fontWeight: FontWeight.bold,
+                                          fontSize: 25,
+                                          fontWeight: FontWeight.w500,
+                                          fontFamily: 'Poppins',
                                         ),
                                       ),
-                                      SizedBox(height: 5),
-                                      _buildMenuOption(Icons.settings, 'Settings'),
-                                      _buildMenuOption(Icons.rule, 'Terms And Conditions'),
-                                      _buildMenuOption(Icons.history_outlined, 'History'),
-                                      _buildMenuOption(Icons.info_outline, 'About Us'),
                                       SizedBox(height: 10),
+                                      _buildPremiumBadge(isVerified),
+                                      SizedBox(height: 15),
+                                      Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              _buildDetailRow(
+                                                Icons.email_outlined,
+                                                email,
+                                              ),
+                                              _buildDetailRow(
+                                                Icons.phone,
+                                                phone,
+                                              ),
+                                              _buildDetailRow(
+                                                Icons.location_on_outlined,
+                                                address,
+                                              ),
+                                              SizedBox(height: 30),
+                                              Text(
+                                                'Financial Overview',
+                                                style: TextStyle(
+                                                  color: Colors.black,
+                                                  fontSize: 18.0,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              SizedBox(height: 10),
+                                              _buildFinancialCard(),
+                                              SizedBox(height: 20),
+                                              Text(
+                                                'Account Options',
+                                                style: TextStyle(
+                                                  color: Colors.black,
+                                                  fontSize: 20.0,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              SizedBox(height: 5),
+                                              _buildMenuOption(
+                                                Icons.settings,
+                                                'FAQs',
+                                                () {
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder:
+                                                          (context) => FAQScreen(),
+                                                    ),
+                                                  );
+                                                },
+                                              ),
+                                              _buildMenuOption(
+                                                Icons.rule,
+                                                'Terms And Conditions',
+                                                () {
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder:
+                                                          (context) => TermsAndConditionsScreen(),
+                                                    ),
+                                                  );
+                                                },
+                                              ),
+                                              _buildMenuOption(
+                                                Icons.history_outlined,
+                                                'History',
+                                                () {
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder:
+                                                          (context) => Column(),
+                                                    ),
+                                                  );
+                                                },
+                                              ),
+                                              _buildMenuOption(
+                                                Icons.info_outline,
+                                                'About Us',
+                                                () {
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder:
+                                                          (context) => AboutUsScreen(),
+                                                    ),
+                                                  );
+                                                },
+                                              ),
+                                              SizedBox(height: 10),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -276,11 +371,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+                    ),
           ),
         );
       },
@@ -304,11 +395,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             borderRadius: BorderRadius.circular(50),
           ),
           child: Center(
-            child: Icon(
-              Icons.check,
-              color: Colors.white,
-              size: 15,
-            ),
+            child: Icon(Icons.check, color: Colors.white, size: 15),
           ),
         ),
       ),
@@ -318,7 +405,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildPremiumBadge(bool isVerified) {
     if (isVerified) {
       return Container(
-        width: 170,
+        width: 190,
         padding: EdgeInsets.symmetric(vertical: 6),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
@@ -332,17 +419,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
               color: Colors.green.shade900.withOpacity(0.6),
               blurRadius: 8,
               offset: Offset(0, 3),
-            )
+            ),
           ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.star,
-              color: Colors.amberAccent,
-              size: 20,
-            ),
+            Icon(Icons.star, color: Colors.amberAccent, size: 20),
             SizedBox(width: 6),
             Text(
               'PREMIUM MEMBER',
@@ -385,8 +468,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-
-
   Widget _buildDetailRow(IconData icon, String text) {
     return Column(
       children: [
@@ -398,8 +479,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Text(
                 text,
                 style: TextStyle(
-                    fontSize: 17,
-                    color: Colors.grey.shade700,fontFamily: 'Poppins'
+                  fontSize: 17,
+                  color: Colors.grey.shade700,
+                  fontFamily: 'Poppins',
                 ),
               ),
             ),
@@ -415,11 +497,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            Colors.green[800]!,
-            Colors.green[600]!,
-            Colors.green[400]!,
-          ],
+          colors: [Colors.green[800]!, Colors.green[600]!, Colors.green[400]!],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -445,11 +523,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           const SizedBox(height: 6.0),
-          const Divider(
-            color: Colors.white24,
-            thickness: 1,
-            height: 1,
-          ),
+          const Divider(color: Colors.white24, thickness: 1, height: 1),
           const SizedBox(height: 12.0),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -498,19 +572,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 6.0, vertical: 3.0),
+                        horizontal: 6.0,
+                        vertical: 3.0,
+                      ),
                       decoration: BoxDecoration(
-                        color: savingsRate >= 0
-                            ? Colors.lightGreen.withOpacity(0.2)
-                            : Colors.red.withOpacity(0.2),
+                        color:
+                            savingsRate >= 0
+                                ? Colors.lightGreen.withOpacity(0.2)
+                                : Colors.red.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(20.0),
                       ),
                       child: Text(
                         '${savingsRate.toStringAsFixed(1)}% Rate',
                         style: TextStyle(
-                          color: savingsRate >= 0
-                              ? Colors.lightGreenAccent[100]
-                              : Colors.red[100],
+                          color:
+                              savingsRate >= 0
+                                  ? Colors.lightGreenAccent[100]
+                                  : Colors.red[100],
                           fontSize: 11.0,
                           fontWeight: FontWeight.bold,
                         ),
@@ -547,10 +625,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     Text(
                       '${savingsRate.toStringAsFixed(1)}% of income',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 9.0,
-                      ),
+                      style: TextStyle(color: Colors.white70, fontSize: 9.0),
                     ),
                   ],
                 ),
@@ -562,17 +637,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildFinancialItem(String title, String value, IconData icon, Color color) {
+  Widget _buildFinancialItem(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(
-              icon,
-              size: 14.0,
-              color: color,
-            ),
+            Icon(icon, size: 14.0, color: color),
             const SizedBox(width: 4.0),
             Text(
               title,
@@ -596,19 +672,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ],
     );
   }
-  Widget _buildMenuOption(IconData icon, String text) {
+
+  Widget _buildMenuOption(IconData icon, String text, VoidCallback onTap) {
     return Padding(
       padding: const EdgeInsets.only(left: 10.0, right: 0, top: 10, bottom: 0),
       child: Row(
         children: [
           Icon(icon, color: Colors.green.shade700),
           SizedBox(width: 5),
-          Text(text, style: TextStyle(fontSize: 17, color: Colors.grey.shade700,fontFamily: 'Poppins')),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 17,
+              color: Colors.grey.shade700,
+              fontFamily: 'Poppins',
+            ),
+          ),
           Spacer(),
           IconButton(
-              onPressed: (){},
-              icon: Icon(Icons.keyboard_arrow_right_rounded)
-          )
+            onPressed: onTap,
+            icon: Icon(Icons.keyboard_arrow_right_rounded),
+          ),
         ],
       ),
     );

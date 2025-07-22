@@ -1,27 +1,30 @@
 import 'dart:convert';
+import 'package:cashcare/constant/api_constant.dart';
 import 'package:cashcare/services/auth_interceptor.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter/material.dart';
 import '../models/goal_model.dart';
 
 class GoalService {
-  final String baseUrl='http://10.0.2.2:8000';
-
+  static final baseUrl = ApiConstants.baseUrl;
 
   Future<List<Goal>> getGoals() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/goals/'),
-        headers: await _buildHeaders(),
-      );
+      final response = await AuthInterceptor.authorizedRequest((token) {
+        return http.get(
+          Uri.parse('$baseUrl/goals/'),
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+        );
+      });
 
       print('API Response: ${response.statusCode} - ${response.body}');
 
       if (response.statusCode == 200) {
         final decoded = json.decode(response.body);
-
         if (decoded is List) {
-          return decoded.map((item) {
+          return decoded.map<Goal>((item) {
             if (item is Map<String, dynamic>) {
               return Goal.fromJson(item);
             } else {
@@ -32,10 +35,10 @@ class GoalService {
           throw Exception('Expected List but got ${decoded.runtimeType}');
         }
       } else {
-        throw Exception('Failed to load goals: ${response.statusCode}');
+        throw _handleError(response);
       }
     } catch (e) {
-      print('Error in getGoals(): $e');
+      print(' Error in getGoals(): $e');
       rethrow;
     }
   }
@@ -46,38 +49,35 @@ class GoalService {
     required DateTime deadline,
     required List<GoalRule> rules,
   }) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/goals/'),
-      headers: await _buildHeaders(),
-      body: json.encode({
-        'title': title,
-        'target_amount': targetAmount,
-        'deadline': deadline.toIso8601String().split('T')[0],
-        'rules': rules.map((rule) => ({
-          'income_category': rule.incomeCategory,
-          'percentage': rule.percentage,
-        })).toList(),
-      }),
-    );
+    final response = await AuthInterceptor.authorizedRequest((token) {
+      return http.post(
+        Uri.parse('$baseUrl/goals/'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'title': title,
+          'target_amount': targetAmount,
+          'deadline': deadline.toIso8601String().split('T')[0],
+          'rules': rules.map((rule) => {
+            'income_category': rule.incomeCategory,
+            'percentage': rule.percentage,
+          }).toList(),
+        }),
+      );
+    });
 
     if (response.statusCode == 201) {
       return Goal.fromJson(json.decode(response.body));
     } else {
-      throw Exception('Failed to create goal: ${response.statusCode}');
+      throw _handleError(response);
     }
-  }
-  Future<Map<String, String>> _buildHeaders() async {
-    final token = await AuthInterceptor.getValidAccessToken();
-    return {
-      'Authorization': 'Bearer $token',
-      'Content-Type': 'application/json',
-    };
   }
 
   Exception _handleError(http.Response response) {
     try {
       final body = json.decode(response.body);
-
       if (body is Map<String, dynamic>) {
         if (body.containsKey('detail')) {
           return Exception(body['detail']);
@@ -92,6 +92,4 @@ class GoalService {
       return Exception('Invalid error response: ${response.body}');
     }
   }
-
-
 }

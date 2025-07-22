@@ -262,7 +262,7 @@ class _GoalListScreenState extends State<GoalListScreen> {
                               ),
                             ),
                             Text(
-                              '₹${goal.currentAmount.toStringAsFixed(0)}',
+                              'Rs.${goal.currentAmount.toStringAsFixed(0)}',
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w700,
@@ -284,7 +284,7 @@ class _GoalListScreenState extends State<GoalListScreen> {
                               ),
                             ),
                             Text(
-                              '₹${goal.targetAmount.toStringAsFixed(0)}',
+                              'Rs.${goal.targetAmount.toStringAsFixed(0)}',
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w700,

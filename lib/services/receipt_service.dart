@@ -1,12 +1,12 @@
 import 'dart:io';
+import 'package:cashcare/constant/api_constant.dart';
 import 'package:cashcare/services/auth_interceptor.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 
 class ReceiptService {
-  static const String _baseUrl = 'http://13.60.63.203:8000/api';
-  final  authToken=AuthInterceptor.getValidAccessToken();
+  static final baseUrl = ApiConstants.baseUrl;
 
   Future<bool> uploadReceipt({
     required File receiptImage,
@@ -15,54 +15,53 @@ class ReceiptService {
     required String date,
   }) async {
     try {
-      if (receiptImage == null || amount.isEmpty || category.isEmpty || date.isEmpty) {
+      if (receiptImage.path.isEmpty || amount.isEmpty || category.isEmpty || date.isEmpty) {
         throw Exception('All fields are required');
       }
-
-      final authToken = await AuthInterceptor.getValidAccessToken();
 
       final amountValue = double.tryParse(amount);
       if (amountValue == null) {
         throw Exception('Invalid amount format');
       }
 
-      var request = http.MultipartRequest(
-        'POST',
-        Uri.parse('$_baseUrl/scan_receipt/'),
-      );
+      final response = await AuthInterceptor.authorizedRequest((token) async {
+        var request = http.MultipartRequest(
+          'POST',
+          Uri.parse('$baseUrl/api/scan_receipt/'),
+        );
 
-      request.headers['Authorization'] = 'Bearer $authToken';
-      request.files.add(await http.MultipartFile.fromPath(
-        'file_path',
-        receiptImage.path,
-        contentType: MediaType('image', 'jpeg'),
-      ));
-      request.fields.addAll({
-        'amount': amountValue.toStringAsFixed(2),
-        'category': category,
-        'date': date,
+        request.headers['Authorization'] = 'Bearer $token';
+        request.files.add(await http.MultipartFile.fromPath(
+          'file_path',
+          receiptImage.path,
+          contentType: MediaType('image', 'jpeg'),
+        ));
+
+        request.fields.addAll({
+          'amount': amountValue.toStringAsFixed(2),
+          'category': category,
+          'date': date,
+        });
+
+        return await http.Response.fromStream(await request.send());
       });
 
-      var response = await request.send();
-      final responseData = await response.stream.bytesToString();
-
       if (response.statusCode == 201) {
-        Fluttertoast.showToast(msg: 'Receipt uploaded successfully!');
+        Fluttertoast.showToast(msg: '📸 Receipt uploaded successfully!');
         return true;
       } else {
         Fluttertoast.showToast(
-          msg: 'Error uploading receipt: ${response.statusCode} - $responseData',
+          msg: ' Error uploading: ${response.statusCode} - ${response.body}',
           toastLength: Toast.LENGTH_LONG,
         );
         return false;
       }
     } catch (e) {
       Fluttertoast.showToast(
-        msg: 'Failed to upload receipt: ${e.toString()}',
+        msg: ' Failed to upload: ${e.toString()}',
         toastLength: Toast.LENGTH_LONG,
       );
       return false;
     }
   }
-
 }

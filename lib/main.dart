@@ -4,10 +4,10 @@ import 'package:cashcare/models/navbar_provider.dart';
 import 'package:cashcare/providers/profile_provider.dart';
 import 'package:cashcare/screens/bottom_navs.dart' show BottomNavbar;
 import 'package:cashcare/services/auth_interceptor.dart';
+import 'package:cashcare/services/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
-import 'package:cashcare/screens/home_screen.dart';
 import 'package:cashcare/auth/login_screen.dart';
 import 'package:cashcare/features/splash/splash_screen.dart';
 
@@ -15,7 +15,6 @@ class MyHttpOverrides extends HttpOverrides {
   @override
   HttpClient createHttpClient(SecurityContext? context) {
     return super.createHttpClient(context)
-    // This line disables SSL certificate verification:
       ..badCertificateCallback = (cert, host, port) => true;
   }
 }
@@ -23,18 +22,30 @@ class MyHttpOverrides extends HttpOverrides {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   HttpOverrides.global = MyHttpOverrides();
-  runApp(MyApp());
+
+  // Initialize and load profile data before app starts
+  final profileProvider = ProfileProvider();
+  await profileProvider.fetchProfile();
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: profileProvider),
+        ChangeNotifierProvider(create: (_) => BottomNavProvider()),
+      ],
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
   final _storage = const FlutterSecureStorage();
-AuthInterceptor ac=AuthInterceptor();
+  final AuthInterceptor _authInterceptor = AuthInterceptor();
 
   Future<bool> _checkAuthStatus() async {
     try {
       final refreshToken = await _storage.read(key: 'refresh_token');
-      if (refreshToken == null) return false;
-      return true;
+      return refreshToken != null;
     } catch (e) {
       return false;
     }
@@ -42,29 +53,27 @@ AuthInterceptor ac=AuthInterceptor();
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => BottomNavProvider()),
-        ChangeNotifierProvider(create: (_) => ProfileProvider()),
-      ],
-      child: FutureBuilder<bool>(
-        future: _checkAuthStatus(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const MaterialApp(
-              debugShowCheckedModeBanner: false,
-              home: Scaffold(body: Center(child: CircularProgressIndicator())),
-            );
-          }
-
-          return MaterialApp(
+    return FutureBuilder<bool>(
+      future: _checkAuthStatus(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const MaterialApp(
             debugShowCheckedModeBanner: false,
-            title: 'CashCare',
-            theme: ThemeData(primarySwatch: Colors.blue),
-            home: snapshot.data == true ? BottomNavbar() : SplashScreen(),
+            home: Scaffold(
+              body: Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
           );
-        },
-      ),
+        }
+
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'CashCare',
+          theme: ThemeData(primarySwatch: Colors.blue),
+          home: snapshot.data == true ? BottomNavbar() : SplashScreen(),
+        );
+      },
     );
   }
 }

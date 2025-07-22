@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:cashcare/constant/api_constant.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AuthInterceptor {
   static const FlutterSecureStorage _storage = FlutterSecureStorage();
-  static const String baseUrl = 'http://13.60.63.203:8000';
-
+  static final baseUrl = ApiConstants.baseUrl;
 
   static Future<String?> getValidAccessToken() async {
     String? accessToken = await _storage.read(key: 'access_token');
@@ -14,7 +14,6 @@ class AuthInterceptor {
 
     if (accessToken == null || refreshToken == null) return null;
 
-    print(accessToken);
     if (_isTokenExpired(accessToken)) {
       try {
         final newToken = await _refreshAccessToken(refreshToken);
@@ -29,6 +28,7 @@ class AuthInterceptor {
         return null;
       }
     }
+
     return accessToken;
   }
 
@@ -36,6 +36,7 @@ class AuthInterceptor {
     try {
       final parts = token.split('.');
       if (parts.length != 3) return true;
+
       final payload = json.decode(
         utf8.decode(base64Url.decode(base64Url.normalize(parts[1]))),
       );
@@ -54,12 +55,16 @@ class AuthInterceptor {
       body: jsonEncode({'refresh': refreshToken}),
     );
 
-
     if (response.statusCode == 200) {
       final newData = jsonDecode(response.body);
-      await _storage.write(key: 'access_token', value: newData['access']);
-      return newData['access'];
+      final newAccessToken = newData['access'];
+
+      if (newAccessToken != null) {
+        await _storage.write(key: 'access_token', value: newAccessToken);
+        return newAccessToken;
+      }
     }
+
     return null;
   }
 
@@ -67,25 +72,29 @@ class AuthInterceptor {
     await _storage.delete(key: 'access_token');
     await _storage.delete(key: 'refresh_token');
     await _storage.deleteAll();
-
   }
 
   static Future<http.Response> authorizedRequest(
-      Future<http.Response> Function() requestFunction,
+      Future<http.Response> Function(String accessToken) requestFunction,
       ) async {
-    final accessToken = await getValidAccessToken();
+    String? accessToken = await getValidAccessToken();
+
     if (accessToken == null) {
+      await logout();
       throw Exception('Authentication required');
     }
 
-    final response = await requestFunction();
+    http.Response response = await requestFunction(accessToken);
 
     if (response.statusCode == 401) {
-      final newAccessToken = await getValidAccessToken();
-      if (newAccessToken == null) {
-        throw Exception('Session expired');
+      accessToken = await getValidAccessToken();
+
+      if (accessToken == null) {
+        await logout();
+        throw Exception('Session expired. Please log in again.');
       }
-      return await requestFunction();
+
+      response = await requestFunction(accessToken);
     }
 
     return response;

@@ -1,22 +1,20 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:cashcare/constant/api_constant.dart';
 import 'auth_interceptor.dart';
 
 class ProfileService {
-  static const String baseUrl = 'http://13.60.63.203:8000';
-  // static const String baseUrl = 'http://192.168.1.70:8000';
-
+  static final baseUrl = ApiConstants.baseUrl;
 
   static Future<Map<String, dynamic>> getProfile() async {
-    return await AuthInterceptor.authorizedRequest(() async {
-      final headers = {
-        'Authorization': 'Bearer ${await AuthInterceptor.getValidAccessToken()}',
-        'Content-Type': 'application/json',
-      };
+    return await AuthInterceptor.authorizedRequest((token) async {
       final response = await http.get(
         Uri.parse('$baseUrl/profile/'),
-        headers: headers,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
       );
       return response;
     }).then((response) {
@@ -29,16 +27,16 @@ class ProfileService {
   }
 
   static Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> data) async {
-    return await AuthInterceptor.authorizedRequest(() async {
-      final headers = {
-        'Authorization': 'Bearer ${await AuthInterceptor.getValidAccessToken()}',
-        'Content-Type': 'application/json',
-      };
-      return await http.patch(
+    return await AuthInterceptor.authorizedRequest((token) async {
+      final response = await http.patch(
         Uri.parse('$baseUrl/profile/'),
-        headers: headers,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
         body: json.encode(data),
       );
+      return response;
     }).then((response) {
       if (response.statusCode == 200) {
         return json.decode(response.body);
@@ -49,15 +47,16 @@ class ProfileService {
   }
 
   static Future<Map<String, dynamic>> updateProfileImage(File image) async {
-    return await AuthInterceptor.authorizedRequest(() async {
+    return await AuthInterceptor.authorizedRequest((token) async {
       final uri = Uri.parse('$baseUrl/profile/');
       final request = http.MultipartRequest('PATCH', uri);
-      request.headers['Authorization'] = 'Bearer ${await AuthInterceptor.getValidAccessToken()}';
+      request.headers['Authorization'] = 'Bearer $token';
       request.files.add(await http.MultipartFile.fromPath('profile_image', image.path));
 
-      final response = await request.send();
-      final respStr = await response.stream.bytesToString();
-      return http.Response(respStr, response.statusCode);
+      final streamedResponse = await request.send();
+      final respStr = await streamedResponse.stream.bytesToString();
+
+      return http.Response(respStr, streamedResponse.statusCode);
     }).then((response) {
       if (response.statusCode == 200) {
         return json.decode(response.body);

@@ -1,4 +1,5 @@
 import 'package:cashcare/services/income_expense_services.dart';
+import 'package:cashcare/utils/snackbar_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_iconly/flutter_iconly.dart';
@@ -38,7 +39,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   }
 
 
-
   void _submitExpense() async {
     if (_formKey.currentState!.validate()) {
       final category = _selectedCategory ?? _categoryController.text;
@@ -47,9 +47,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       if (amount != null) {
         try {
           await ApiService().storeExpense(amount, category);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Income added successfully!')),
-          );
+          SnackBarService.showCustomSnackBar(context: context,
+              message: "Expense added successfully",
+              icon: Icon(Icons.check_circle_outline_sharp),
+              backgroundColor: Colors.green,
+              textColor: Colors.white);
           _amountController.clear();
           _categoryController.clear();
         } catch (e) {
@@ -80,6 +82,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           icon: Icon(IconlyBold.arrowLeftCircle, color: Colors.teal),
           onPressed: () => Navigator.pop(context),
         ),
+        title: Text('Add Expense', style: TextStyle(fontFamily: 'poppins'),),
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(20),
@@ -131,7 +135,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 controller: _amountController,
                 decoration: InputDecoration(
                   labelText: 'Amount',
-                  prefixIcon: Icon(Icons.currency_rupee, color: Colors.green),
+                  prefixIcon: Icon(Icons.money_rounded, color: Colors.green),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -238,7 +242,7 @@ class _CategoryButton extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color:
-              isSelected ? category.color.withOpacity(0.2) : Colors.grey[100],
+          isSelected ? category.color.withOpacity(0.2) : Colors.grey[100],
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? category.color : Colors.grey[300]!,

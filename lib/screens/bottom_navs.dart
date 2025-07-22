@@ -4,22 +4,48 @@ import 'package:cashcare/screens/history.dart';
 import 'package:cashcare/screens/notification_screen.dart';
 import 'package:cashcare/screens/profile.dart' show ProfileScreen;
 import 'package:cashcare/screens/receipt_scan.dart';
+import 'package:cashcare/services/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_iconly/flutter_iconly.dart';
 import '../screens/home_screen.dart';
 
 
-class BottomNavbar extends StatelessWidget {
+class BottomNavbar extends StatefulWidget {
   final Map<String, dynamic>? userData;
 
-  BottomNavbar({Key? key,this.userData}) : super(key: key);
+  BottomNavbar({Key? key, this.userData}) : super(key: key);
+
+  @override
+  State<BottomNavbar> createState() => _BottomNavbarState();
+}
+
+class _BottomNavbarState extends State<BottomNavbar> {
   final List<Widget> _pages = [
     HomeScreen(),
     NotificationsScreen(),
     PlaceTypeView(),
     ProfileScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUnreadNotifications(); // ✅ only called once!
+  }
+
+  void _fetchUnreadNotifications() async {
+    try {
+      final notificationService = NotificationService();
+      final notifications = await notificationService.getNotifications();
+      final unreadCount = notifications.where((n) => !n.isRead).length;
+
+      Provider.of<BottomNavProvider>(context, listen: false)
+          .updateUnreadCount(unreadCount);
+    } catch (e) {
+      print("Error fetching unread notifications: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -160,5 +186,4 @@ class BottomNavbar extends StatelessWidget {
       ),
     );
   }
-
 }

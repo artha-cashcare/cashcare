@@ -22,9 +22,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     _notificationService = NotificationService();
     _refreshNotifications();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<BottomNavProvider>(context, listen: false).updateUnreadCount(0);
+      Provider.of<BottomNavProvider>(
+        context,
+        listen: false,
+      ).updateUnreadCount(0);
     });
-
   }
 
   void _refreshNotifications() {
@@ -61,12 +63,19 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Notifications', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Notifications',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         centerTitle: false,
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.download_done_outlined, size: 26,color: Colors.blue,),
+            icon: const Icon(
+              Icons.download_done_outlined,
+              size: 26,
+              color: Colors.blue,
+            ),
             onPressed: _isLoading ? null : _handleMarkAllRead,
             tooltip: 'Mark all as read',
           ),
@@ -76,9 +85,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         future: _notificationsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: FloatingDotLoading(
-
-            ));
+            return const Center(child: FloatingDotLoading());
           } else if (snapshot.hasError) {
             return Center(child: Text('Error loading notifications'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
@@ -86,9 +93,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.notifications_off, size: 48, color: Colors.grey[400]),
+                  Icon(
+                    Icons.notifications_off,
+                    size: 48,
+                    color: Colors.grey[400],
+                  ),
                   const SizedBox(height: 16),
-                  Text('No notifications yet', style: TextStyle(color: Colors.grey[600])),
+                  Text(
+                    'No notifications yet',
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
                 ],
               ),
             );
@@ -96,12 +110,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
           final notifications = snapshot.data!;
           final unreadCount = notifications.where((n) => !n.isRead).length;
-          Provider.of<BottomNavProvider>(context, listen: false).updateUnreadCount(unreadCount);
+          Provider.of<BottomNavProvider>(
+            context,
+            listen: false,
+          ).updateUnreadCount(unreadCount);
           notifications.sort((a, b) {
-            if (a.isRead == b.isRead) return 0;
-            return a.isRead ? 1 : -1;
+            if (a.isRead != b.isRead) {
+              return a.isRead ? 1 : -1;
+            }
+            return b.createdAt.compareTo(a.createdAt);
           });
-
 
           return ListView.separated(
             padding: const EdgeInsets.symmetric(vertical: 8),
@@ -128,7 +146,9 @@ class _NotificationCard extends StatelessWidget {
     final theme = Theme.of(context);
     final isUnread = !notification.isRead;
     final iconColor = _getColorForType(notification.type);
-    final timeText = DateFormat('h:mm a').format(notification.createdAt.add(const Duration(hours: 5, minutes: 45)));
+    final timeText = DateFormat(
+      'h:mm a',
+    ).format(notification.createdAt.add(const Duration(hours: 5, minutes: 45)));
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -220,31 +240,46 @@ class _NotificationCard extends StatelessWidget {
 
   IconData _getIconForType(String type) {
     switch (type) {
-      case 'reminder': return Icons.notifications;
-      case 'achievement': return Icons.emoji_events;
-      case 'update': return Icons.update;
-      case 'warning': return Icons.warning;
-      default: return Icons.notifications_active;
+      case 'reminder':
+        return Icons.notifications;
+      case 'achievement':
+        return Icons.emoji_events;
+      case 'update':
+        return Icons.update;
+      case 'warning':
+        return Icons.warning;
+      default:
+        return Icons.notifications_active;
     }
   }
 
   Color _getColorForType(String type) {
     switch (type) {
-      case 'reminder': return Colors.orange;
-      case 'achievement': return Colors.green;
-      case 'update': return Colors.blue;
-      case 'warning': return Colors.red;
-      default: return Colors.purple;
+      case 'reminder':
+        return Colors.orange;
+      case 'achievement':
+        return Colors.green;
+      case 'update':
+        return Colors.blue;
+      case 'warning':
+        return Colors.red;
+      default:
+        return Colors.purple;
     }
   }
 
   String _getTitleForType(String type) {
     switch (type) {
-      case 'reminder': return 'Reminder';
-      case 'achievement': return 'Achievement!';
-      case 'update': return 'Update';
-      case 'warning': return 'Notice';
-      default: return 'Notification';
+      case 'reminder':
+        return 'Reminder';
+      case 'achievement':
+        return 'Achievement!';
+      case 'update':
+        return 'Update';
+      case 'warning':
+        return 'Notice';
+      default:
+        return 'Notification';
     }
   }
 }

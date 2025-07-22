@@ -1,10 +1,11 @@
 import 'dart:convert';
+import 'package:cashcare/constant/api_constant.dart';
 import 'package:cashcare/features/sms_parsing/models/smsparse_model.dart';
 import 'package:http/http.dart' as http;
 import 'package:cashcare/services/auth_interceptor.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://13.60.63.203:8000';
+  static final baseUrl=ApiConstants.baseUrl;
 
 
   Future<String> _getAuthToken() async {

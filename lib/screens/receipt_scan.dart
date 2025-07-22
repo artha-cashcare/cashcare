@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_iconly/flutter_iconly.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:intl/intl.dart';
@@ -9,44 +10,44 @@ class ReceiptScanPage extends StatefulWidget {
 
   @override
   _ReceiptScanPageState createState() => _ReceiptScanPageState();
-}
-
-class _ReceiptScanPageState extends State<ReceiptScanPage> with TickerProviderStateMixin {
-  File? _image;
-  bool _isLoading = false;
-  bool _isProcessing = false;
-  late AnimationController _scanController;
-  late Animation<double> _scanAnimation;
-
-  final TextEditingController _amountController = TextEditingController();
-  final TextEditingController _dateController = TextEditingController();
-  final TextEditingController _categoryController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
-
-  @override
-  void initState() {
-    super.initState();
-    _scanController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    )..repeat(reverse: true);
-    _scanAnimation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(
-        parent: _scanController,
-        curve: Curves.easeInOut,
-      ),
-    );
   }
 
-  Future<void> _pickImage(ImageSource source) async {
-    try {
-      final pickedFile = await ImagePicker().pickImage(source: source);
-      if (pickedFile != null) {
-        setState(() {
-          _image = File(pickedFile.path);
-          _isProcessing = true;
-        });
-        await _processImage(_image!);
+  class _ReceiptScanPageState extends State<ReceiptScanPage> with TickerProviderStateMixin {
+    File? _image;
+    bool _isLoading = false;
+    bool _isProcessing = false;
+    late AnimationController _scanController;
+    late Animation<double> _scanAnimation;
+
+    final TextEditingController _amountController = TextEditingController();
+    final TextEditingController _dateController = TextEditingController();
+    final TextEditingController _categoryController = TextEditingController();
+    final _formKey = GlobalKey<FormState>();
+
+    @override
+    void initState() {
+      super.initState();
+      _scanController = AnimationController(
+        duration: const Duration(milliseconds: 1500),
+        vsync: this,
+      )..repeat(reverse: true);
+      _scanAnimation = Tween<double>(begin: 0, end: 1).animate(
+        CurvedAnimation(
+          parent: _scanController,
+          curve: Curves.easeInOut,
+        ),
+      );
+    }
+
+    Future<void> _pickImage(ImageSource source) async {
+      try {
+        final pickedFile = await ImagePicker().pickImage(source: source);
+        if (pickedFile != null) {
+          setState(() {
+            _image = File(pickedFile.path);
+            _isProcessing = true;
+          });
+          await _processImage(_image!);
       }
     } catch (e) {
       _showErrorSnackbar('Error picking image: ${e.toString()}');
@@ -150,11 +151,11 @@ class _ReceiptScanPageState extends State<ReceiptScanPage> with TickerProviderSt
         try {
           String? dateText;
 
-          if (match.groupCount > 1) {
-            dateText = match.group(2);
-          } else {
-            dateText = match.group(0);
-          }
+            if (match.groupCount > 1) {
+              dateText = match.group(2);
+            } else {
+              dateText = match.group(0);
+            }
 
           if (dateText != null) {
             dateText = dateText.replaceAll(RegExp(r'[-/.]'), '-');
@@ -244,18 +245,13 @@ class _ReceiptScanPageState extends State<ReceiptScanPage> with TickerProviderSt
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
-          "Scan Receipt",
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
-            letterSpacing: 0.5,
-          ),
-        ),
         backgroundColor: Colors.white,
-        elevation: 0.5,
+        leading: IconButton(
+          icon: Icon(IconlyBold.arrowLeftCircle, color: Colors.teal),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text('Scan Receipt',style: TextStyle(fontFamily: 'poppins'),),
         centerTitle: true,
-        iconTheme: IconThemeData(color: Colors.grey[800]),
       ),
       body: Form(
         key: _formKey,
@@ -304,7 +300,7 @@ class _ReceiptScanPageState extends State<ReceiptScanPage> with TickerProviderSt
                                         _scanAnimation.value * MediaQuery.of(context).size.width * 0.45,
                                       ),
                                       child: Container(
-                                        height: 3,
+                                        height: 10,
                                         width: MediaQuery.of(context).size.width * 0.8,
                                         decoration: BoxDecoration(
                                           gradient: LinearGradient(
@@ -412,7 +408,7 @@ class _ReceiptScanPageState extends State<ReceiptScanPage> with TickerProviderSt
                     borderSide: BorderSide(color: Colors.green[700]!, width: 2),
                   ),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  prefixIcon: Icon(Icons.attach_money, color: Colors.grey[600]),
+                  prefixIcon: Icon(Icons.money_outlined, color: Colors.grey[600]),
                   prefixIconConstraints: const BoxConstraints(minWidth: 40),
                 ),
                 keyboardType: TextInputType.numberWithOptions(decimal: true),

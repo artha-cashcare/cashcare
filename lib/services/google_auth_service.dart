@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:cashcare/constant/api_constant.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
@@ -6,6 +7,7 @@ import 'package:http/http.dart' as http;
 class GoogleAuthService {
   // FlutterSecureStorage instance
   static final _secureStorage = const FlutterSecureStorage();
+  static final baseUrl=ApiConstants.baseUrl;
 
   // Google Sign-In config
   static final GoogleSignIn _googleSignIn = GoogleSignIn(
@@ -26,8 +28,9 @@ class GoogleAuthService {
       print("ID Token: $idToken");
 
       // Send to your Django backend
+
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:8000/api/auth/google/'),
+        Uri.parse('$baseUrl/api/auth/google/'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'id_token': idToken}),
       );

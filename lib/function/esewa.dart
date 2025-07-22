@@ -1,77 +1,67 @@
-import 'dart:convert';
-import 'package:cashcare/utils/token_helper.dart';
-import 'package:http/http.dart' as http;
-import 'package:flutter/material.dart';
-import 'package:esewa_flutter_sdk/esewa_config.dart';
+  import 'package:cashcare/services/esewa_service.dart';
 import 'package:esewa_flutter_sdk/esewa_flutter_sdk.dart';
-import 'package:esewa_flutter_sdk/esewa_payment.dart';
-import 'package:esewa_flutter_sdk/esewa_payment_success_result.dart' show EsewaPaymentSuccessResult;
-import 'package:provider/provider.dart';
+  import 'package:esewa_flutter_sdk/esewa_config.dart';
+  import 'package:esewa_flutter_sdk/esewa_payment.dart';
+  import 'package:esewa_flutter_sdk/esewa_payment_success_result.dart';
+  import 'package:flutter/material.dart';
 
-const String CLIENT_ID = 'JB0BBQ4aD0UqIThFJwAKBgAXEUkEGQUBBAwdOgABHD4DChwUAB0R';
-const String SECRET_KEY = 'BhwIWQQADhIYSxILExMcAgFXFhcOBwAKBgAXEQ==';
+  class Esewa {
+    Future<void> pay(BuildContext context) async {
+      try {
+        EsewaFlutterSdk.initPayment(
+          esewaConfig: EsewaConfig(
+            environment: Environment.test,  // or Environment.production
+            clientId: "JB0BBQ4aD0UqIThFJwAKBgAXEUkEGQUBBAwdOgABHD4DChwUAB0R",
+            secretId: "BhwIWQQADhIYSxILExMcAgFXFhcOBwAKBgAXEQ=="
 
-class Esewa {
-  late final BuildContext context;
-  final headers =  TokenService.getAuthToken();
+          ),
+          esewaPayment: EsewaPayment(
+            productId: "1d71jd81",
+            productName: "Premium 1",
+            productPrice: "2000",
+            callbackUrl: 'https://yourdomain.com/callback',  // You can add your callback URL if needed
+          ),
+          onPaymentSuccess: (EsewaPaymentSuccessResult result) async{
+            debugPrint('Payment SUCCESS: ${result.productName}, ${result.totalAmount}');
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Payment Successful!')),
+            );
 
 
-  void startEsewaPayment() {
-    try {
-      EsewaFlutterSdk.initPayment(
-        esewaConfig: EsewaConfig(
-          environment: Environment.test,
-          clientId: CLIENT_ID,
-          secretId: SECRET_KEY,
-        ),
-        esewaPayment: EsewaPayment(
-          productId: "1234567890",
-          productName: "Test Product",
-          productPrice: "10",
-          callbackUrl: '',
-        ),
-        onPaymentSuccess: (EsewaPaymentSuccessResult result) async {
-          print("✅ Payment Success: $result");
+            try {
+              await PaymentService.sendPaymentToServer(
+                productId: "1d71jd81",
+                productName: result.productName,
+                amount: result.totalAmount,
+                referenceId: result.refId,
+                status: "Success",
+                date: DateTime.now().toIso8601String(),
+              );
+            } catch (e) {
+              debugPrint("❌ Failed to send payment to server: $e");
+            }
 
-          // Call Django API to verify user
-          await verifyUserAsPremium();
+          },
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("🎉 Payment success! Premium activated.")),
-          );
-        },
-        onPaymentFailure: (error) {
-          print("❌ Payment Failed: $error");
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("❌ Payment failed.")),
-          );
-        },
-        onPaymentCancellation: (cancel) {
-          print("🚫 Payment Cancelled: $cancel");
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("🚫 Payment cancelled.")),
-          );
-        },
-      );
-    } catch (e) {
-      print("Exception: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("❗ Error starting payment: $e")),
-      );
+
+          onPaymentFailure: () {
+            debugPrint('Payment FAILURE');
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Payment Failed!')),
+            );
+          },
+          onPaymentCancellation: () {
+            debugPrint('Payment CANCELLED');
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Payment Cancelled by User')),
+            );
+          },
+        );
+      } catch (e) {
+        debugPrint('Payment EXCEPTION: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error during payment: $e')),
+        );
+      }
     }
   }
-
-  Future<void> verifyUserAsPremium() async {
-    final url = Uri.parse('http://10.0.2.2:8000/api/verify-payment/'); // ✅ Correct URL for local Django server
-    final response = await http.post(
-      url,
-      headers: await headers
-    );
-
-    if (response.statusCode == 200) {
-      print("✅ User verified as premium.");
-    } else {
-      print("❌ Failed to verify user. ${response.body}");
-    }
-  }
-}

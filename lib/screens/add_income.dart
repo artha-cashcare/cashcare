@@ -1,5 +1,6 @@
 import 'package:cashcare/models/income_source.dart';
 import 'package:cashcare/services/income_expense_services.dart';
+import 'package:cashcare/utils/snackbar_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_iconly/flutter_iconly.dart';
@@ -42,9 +43,11 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
       if (amount != null) {
         try {
           await ApiService().storeIncome(amount, source);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Income added successfully!')),
-          );
+          SnackBarService.showCustomSnackBar(context: context,
+              message: "Income added successfully",
+              icon: Icon(Icons.check_circle_outline_sharp,color: Colors.white,),
+              backgroundColor: Colors.green,
+              textColor: Colors.white);
           _amountController.clear();
           _sourceController.clear();
         } catch (e) {
@@ -76,6 +79,8 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
           icon: Icon(IconlyBold.arrowLeftCircle, color: Colors.teal),
           onPressed: () => Navigator.pop(context),
         ),
+        title: Text('Add Income',style: TextStyle(fontFamily: 'poppins'),),
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
@@ -136,8 +141,7 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
                 controller: _amountController,
                 decoration: InputDecoration(
                   labelText: 'Amount',
-                  prefixText: '₨',
-                  prefixStyle: TextStyle(fontSize: 20),
+                  prefixIcon: Icon(Icons.money_rounded, color: Colors.green),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),

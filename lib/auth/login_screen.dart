@@ -159,18 +159,19 @@ class _LoginPageState extends State<LoginPage> {
                   style: TextStyle(fontSize: 16, color: Colors.grey),
                 ),
                 const SizedBox(height: 20),
-                Container(
-                  height: 70,
-                  width: 70,
-                  color: Colors.grey[100],
-                  child: ClipRRect(
+                GestureDetector(
+                  onTap: (){_handleGoogleSignIn();},
+                  child: Container(
+                    height: 70,
+                    width: 70,
+                    color: Colors.grey[100],
+                    child: ClipRRect(
                       borderRadius: BorderRadius.circular(10),
-                      child: ElevatedButton(onPressed: () {
-                        _handleGoogleSignIn();
-                      }, child: Image.asset(
+                      child: Image.asset(
                         'assets/images/google_logo.jpg',
                         fit: BoxFit.cover,
-                      ),)
+                      ),
+                    ),
                   ),
                 ),
                 Row(

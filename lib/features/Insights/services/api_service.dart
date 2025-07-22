@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:cashcare/constant/api_constant.dart';
 import 'package:cashcare/services/auth_interceptor.dart';
 import 'package:http/http.dart' as http;
 
@@ -7,7 +8,7 @@ import '../models/monthly_data.dart';
 import '../models/recommendation.dart';
 import 'package:cashcare/utils/token_helper.dart';
 class ApiService {
-  static const String baseUrl = 'http://10.0.2.2:8000';
+  static final baseUrl=ApiConstants.baseUrl;
 
   final headers =  TokenService.getAuthToken();
 
