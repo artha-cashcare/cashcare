@@ -34,7 +34,7 @@ class AuthService {
         final errorMessage = errorData['detail'] ??
             (response.statusCode == 401
                 ? 'Invalid email or password'
-                : 'Login failed');
+                : 'Invalid email or password');
         throw Exception(errorMessage);
       }
     } on http.ClientException {

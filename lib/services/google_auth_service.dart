@@ -5,11 +5,9 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 
 class GoogleAuthService {
-  // FlutterSecureStorage instance
   static final _secureStorage = const FlutterSecureStorage();
   static final baseUrl=ApiConstants.baseUrl;
 
-  // Google Sign-In config
   static final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: ['email'],
     serverClientId: '883174720862-sat6t1umo7e8q6c9nan8lgih4t28d8pc.apps.googleusercontent.com',
@@ -17,7 +15,7 @@ class GoogleAuthService {
 
   static Future<bool> signInWithGoogle() async {
     try {
-      await _googleSignIn.signOut(); // optional: always pick account
+      await _googleSignIn.signOut();
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) return false;
 
@@ -27,7 +25,6 @@ class GoogleAuthService {
 
       print("ID Token: $idToken");
 
-      // Send to your Django backend
 
       final response = await http.post(
         Uri.parse('$baseUrl/api/auth/google/'),
@@ -54,13 +51,12 @@ class GoogleAuthService {
     }
   }
 
-  // Optional: Helper to fetch token
   static Future<String?> getAccessToken() async {
     return await _secureStorage.read(key: 'access_token');
   }
 
   static Future<void> logout() async {
     await _googleSignIn.signOut();
-    await _secureStorage.deleteAll(); // clear tokens
+    await _secureStorage.deleteAll();
   }
 }

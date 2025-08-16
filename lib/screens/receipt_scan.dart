@@ -300,7 +300,7 @@ class ReceiptScanPage extends StatefulWidget {
                                         _scanAnimation.value * MediaQuery.of(context).size.width * 0.45,
                                       ),
                                       child: Container(
-                                        height: 10,
+                                        height:5,
                                         width: MediaQuery.of(context).size.width * 0.8,
                                         decoration: BoxDecoration(
                                           gradient: LinearGradient(

@@ -37,9 +37,9 @@ class PaymentService {
     });
 
     if (response.statusCode == 201) {
-      print("✅ Payment stored and user verified!");
+      print("Payment stored and user verified!");
     } else {
-      print("❌ Server Error [${response.statusCode}]: ${response.body}");
+      print("Server Error [${response.statusCode}]: ${response.body}");
       throw Exception("Payment server error");
     }
   }

@@ -18,12 +18,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   String? _errorMessage;
 
   Future<void> _sendResetLink() async {
-    // Clear previous errors
     setState(() => _errorMessage = null);
 
     final email = _emailController.text.trim();
 
-    // Validate email
     if (email.isEmpty) {
       setState(() => _errorMessage = 'Please enter your email address');
       return;
@@ -44,12 +42,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       if (error != null) {
         setState(() => _errorMessage = error);
       } else {
-        // Show success dialog
 
         SnackBarService.showCustomSnackBar(context: context, message: 'We\'ve sent a password reset link to your email.', icon: Icon(Icons.check_circle_outline), backgroundColor: Colors.green, textColor: Colors.white);
 
 
-        // Navigate back to login
         if (mounted) {
           Navigator.pushReplacement(
             context,

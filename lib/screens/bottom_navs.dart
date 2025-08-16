@@ -5,6 +5,7 @@ import 'package:cashcare/screens/notification_screen.dart';
 import 'package:cashcare/screens/profile.dart' show ProfileScreen;
 import 'package:cashcare/screens/receipt_scan.dart';
 import 'package:cashcare/services/notification_service.dart';
+import 'package:cashcare/widgets/global_connection_checker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_iconly/flutter_iconly.dart';
@@ -22,10 +23,10 @@ class BottomNavbar extends StatefulWidget {
 
 class _BottomNavbarState extends State<BottomNavbar> {
   final List<Widget> _pages = [
-    HomeScreen(),
-    NotificationsScreen(),
-    PlaceTypeView(),
-    ProfileScreen(),
+    InternetChecker(child: HomeScreen()),
+    InternetChecker(child: NotificationsScreen()),
+    InternetChecker(child: PlaceTypeView()),
+    InternetChecker(child: ProfileScreen()),
   ];
 
   @override

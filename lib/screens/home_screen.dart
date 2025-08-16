@@ -37,6 +37,7 @@ class _HomePageState extends State<HomeScreen> {
 
   double totalIncome = 0.0;
   double totalExpense = 0.0;
+  // double balance=0.0;
   Map<String, dynamic>? _userProfile;
 
   @override
@@ -44,6 +45,8 @@ class _HomePageState extends State<HomeScreen> {
     super.initState();
     _loadUserData();
   }
+  
+
 
   Future<void> _loadUserData() async {
     try {
@@ -61,6 +64,7 @@ class _HomePageState extends State<HomeScreen> {
         userName = _userProfile?['first_name'] ?? 'Guest';
         totalIncome = results[2] as double;
         totalExpense = results[3] as double;
+
         isLoading = false;
       });
     } catch (e) {
@@ -71,8 +75,11 @@ class _HomePageState extends State<HomeScreen> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
+    double balance = totalIncome - totalExpense;
+
     if (isLoading) {
       return const Scaffold(body: Center(child: FloatingDotLoading()));
     }
@@ -176,7 +183,7 @@ class _HomePageState extends State<HomeScreen> {
                                   ? Icons.visibility_outlined
                                   : Icons.visibility_off_outlined,
                               size: 20,
-                              color: Colors.white70,
+                              color: Colors.white,
                             ),
                           ),
                         ],
@@ -187,9 +194,9 @@ class _HomePageState extends State<HomeScreen> {
                             ? "NPR ${(totalIncome - totalExpense)
                             .toStringAsFixed(2)}"
                             : "••••••",
-                        style: const TextStyle(
+                        style:  TextStyle(
                           fontSize: 32,
-                          color: Colors.white,
+                          color: balance<0?Colors.red:Colors.white,
                           fontWeight: FontWeight.w800,
                           letterSpacing: 0.5,
                         ),
@@ -343,7 +350,6 @@ class _HomePageState extends State<HomeScreen> {
                           final isVerified = profileProvider.profile?['is_verified'] ?? false;
 
                           if (profileProvider.loading) {
-                            // Show loading indicator if profile is still loading
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text('Checking your account status...'),
@@ -378,12 +384,12 @@ class _HomePageState extends State<HomeScreen> {
                                   ),
                                 ],
                               ),
-                              action: SnackBarAction(
-                                label: 'Upgrade',
-                                textColor: Colors.amber,
-                                onPressed: () {
-                                  Esewa esewa = Esewa();
-                                  esewa.pay(context);
+                                action: SnackBarAction(
+                                  label: 'Upgrade',
+                                  textColor: Colors.amber,
+                                  onPressed: () {
+                                    Esewa esewa = Esewa();
+                                    esewa.pay(context);
                                 },
                               ),
                               duration: Duration(seconds: 2),

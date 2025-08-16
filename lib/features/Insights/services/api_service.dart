@@ -145,7 +145,7 @@ class ApiService {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/source-expense-comparison/'),
-        headers: await headers
+        headers: await headers,
       );
 
       print('Response status: ${response.statusCode}');
@@ -153,17 +153,27 @@ class ApiService {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as Map<String, dynamic>;
+
+
+        final highestSource = data['highest_source']?.toString() ?? 'Unknown Source';
+        final highestExpense = (data['highest_expense'] as num?)?.toDouble() ?? 0.0;
+        final message = data['message']?.toString() ?? 'No recommendations available';
+
         return Recommendation(
-          highestSource: data['highest_source'].toString(),
-          highestExpense: (data['highest_expense'] as num).toDouble(),
-          message: data['message'] as String,
+          highestSource: highestSource,
+          highestExpense: highestExpense,
+          message: message,
         );
       } else {
         throw Exception('Failed to load recommendation: ${response.statusCode}');
       }
     } catch (e) {
       print('Error in getRecommendation: $e');
-      throw Exception('Failed to load recommendation: $e');
+      return Recommendation(
+        highestSource: 'Unknown',
+        highestExpense: 0.0,
+        message: 'No recommendations available due to technical issues',
+      );
     }
   }
 }

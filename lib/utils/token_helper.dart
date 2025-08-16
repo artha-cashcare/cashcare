@@ -3,7 +3,7 @@ import 'package:cashcare/services/auth_interceptor.dart';
 class TokenService {
   static Future<Map<String,String>> getAuthToken() async {
     final token = await AuthInterceptor.getValidAccessToken();
-    print("🔥 Access Token: $token");
+    print("Access Token: $token");
 
 
     return {

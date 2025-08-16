@@ -71,13 +71,13 @@ class GoalDetailScreen extends StatelessWidget {
             ),
             SizedBox(height: 16),
             if (goal.isCompleted)
-              _statusCard("🎉 Goal Completed!", Colors.green)
+              _statusCard("Goal Completed!", Colors.green)
             else if (goal.isFailed)
-              _statusCard("❌ Goal Failed", Colors.red)
+              _statusCard(" Goal Failed", Colors.red)
             else if (daysLeft <= 0)
-                _statusCard("⚠️ Deadline Passed", Colors.orangeAccent)
+                _statusCard(" Deadline Passed", Colors.orangeAccent)
               else
-                _statusCard("🚀 Keep Going!", Colors.blueAccent),
+                _statusCard(" Keep Going!", Colors.blueAccent),
           ],
         ),
       ),

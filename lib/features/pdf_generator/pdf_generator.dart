@@ -7,15 +7,15 @@ import 'package:printing/printing.dart';
 class PdfGenerator {
   static Future<void> generateMonthlyPdf(Map<String, dynamic> data) async {
     final pdf = pw.Document();
-    final pw.ImageProvider? logo = await _loadLogo();
+    final logo = await _loadLogo();
 
-    const PdfColor primaryGreen = PdfColor.fromInt(0xFF1B5E20);
-    const PdfColor accentGreen = PdfColor.fromInt(0xFF4CAF50);
-    const PdfColor textColor = PdfColors.grey800;
-    const PdfColor lightTextColor = PdfColors.grey600;
-    const PdfColor borderColor = PdfColors.grey300;
+    const primaryGreen = PdfColor.fromInt(0xFF1B5E20);
+    const accentGreen = PdfColor.fromInt(0xFF4CAF50);
+    const textColor = PdfColors.grey800;
+    const lightTextColor = PdfColors.grey600;
+    const borderColor = PdfColors.grey300;
 
-    final List<dynamic> reports = data['monthly_reports'] ?? [data];
+    final reports = data['monthly_reports'] ?? [data];
 
     pdf.addPage(
       pw.MultiPage(
@@ -71,33 +71,35 @@ class PdfGenerator {
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
               for (final monthData in reports) ...[
-                _buildSectionTitle("Report Summary for ${monthData['month'] ?? monthData['quarter'] ?? monthData['year'] ?? 'Selected Period'}", primaryGreen),
+                _sectionTitle(
+                  "Report Summary for ${monthData['month'] ?? monthData['quarter'] ?? monthData['year'] ?? 'Selected Period'}",
+                  primaryGreen,
+                ),
                 pw.SizedBox(height: 15),
-                _buildSummaryCards(
-                  monthData['total_income'] ?? 0,
-                  monthData['total_expenses'] ?? 0,
-                  monthData['remaining'] ?? 0,
+                _summaryCards(
+                  _toDouble(monthData['total_income']),
+                  _toDouble(monthData['total_expenses']),
+                  _toDouble(monthData['remaining']),
                   primaryGreen,
                   accentGreen,
                 ),
                 pw.SizedBox(height: 25),
-                _buildSectionTitle('Expense Breakdown', primaryGreen),
+                _sectionTitle('Expense Breakdown', primaryGreen),
                 pw.SizedBox(height: 15),
-                _buildExpenseBreakdown(
+                _expenseBreakdown(
                   monthData['breakdown'] as List<dynamic>?,
-                  monthData['total_expenses'] ?? 0,
+                  _toDouble(monthData['total_expenses']),
                   textColor,
                 ),
                 pw.SizedBox(height: 25),
-                _buildSectionTitle('Top Transactions', primaryGreen),
+                _sectionTitle('Top Transactions', primaryGreen),
                 pw.SizedBox(height: 15),
-                _buildTransactionsTable(
-                  monthData["top_transactions"] as List<dynamic>?,
+                _transactionsTable(
+                  monthData['top_transactions'] as List<dynamic>?,
                   primaryGreen,
                   textColor,
                   borderColor,
                 ),
-                pw.SizedBox(height: 30),
                 if (reports.indexOf(monthData) < reports.length - 1)
                   pw.NewPage(),
               ],
@@ -107,59 +109,62 @@ class PdfGenerator {
       ),
     );
 
-    final fileName = "CashCare_Report_${data['month'] ?? data['quarter'] ?? data['year'] ?? 'Period'}.pdf";
+    final fileName =
+        "CashCare_Report_${data['month'] ?? data['quarter'] ?? data['year'] ?? 'Period'}.pdf";
     await Printing.sharePdf(bytes: await pdf.save(), filename: fileName);
   }
 
-  static pw.Widget _buildSectionTitle(String title, PdfColor color) {
-    return pw.Container(
-      decoration: pw.BoxDecoration(border: pw.Border(left: pw.BorderSide(color: color, width: 5))),
-      padding: const pw.EdgeInsets.only(left: 10, bottom: 5),
-      child: pw.Text(
-        title,
-        style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold, color: color),
-      ),
-    );
+  static double _toDouble(dynamic val) {
+    if (val == null) return 0.0;
+    if (val is double) return val;
+    if (val is int) return val.toDouble();
+    if (val is String) return double.tryParse(val) ?? 0.0;
+    return 0.0;
   }
 
-  static pw.Widget _buildSummaryCards(
-      double income, double expenses, double remaining, PdfColor primaryColor, PdfColor accentColor) {
-    return pw.Row(
-      mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
-      children: [
-        _buildSummaryCard('Total Income', 'Rs ${income.toStringAsFixed(2)}', primaryColor, PdfColors.green),
-        _buildSummaryCard('Total Expenses', 'Rs ${expenses.toStringAsFixed(2)}', primaryColor, PdfColors.red),
-        _buildSummaryCard('Net Remaining', 'Rs ${remaining.toStringAsFixed(2)}', primaryColor, accentColor),
-      ],
-    );
-  }
+  static pw.Widget _sectionTitle(String text, PdfColor color) => pw.Container(
+    decoration: pw.BoxDecoration(
+      border: pw.Border(left: pw.BorderSide(color: color, width: 5)),
+    ),
+    padding: const pw.EdgeInsets.only(left: 10, bottom: 5),
+    child: pw.Text(
+      text,
+      style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold, color: color),
+    ),
+  );
 
-  static pw.Widget _buildSummaryCard(String title, String value, PdfColor primaryColor, PdfColor valueColor) {
-    return pw.Expanded(
-      child: pw.Container(
-        margin: const pw.EdgeInsets.symmetric(horizontal: 5),
-        padding: const pw.EdgeInsets.all(15),
-        decoration: pw.BoxDecoration(
-          color: PdfColors.white,
-          borderRadius: pw.BorderRadius.circular(8),
-          boxShadow: [
-            pw.BoxShadow(color: PdfColors.grey200, blurRadius: 5, offset: const PdfPoint(0, 2)),
-          ],
+  static pw.Widget _summaryCards(double income, double expenses, double remaining,
+      PdfColor primaryColor, PdfColor accentColor) =>
+      pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
+        children: [
+          _summaryCard('Total Income', 'Rs ${income.toStringAsFixed(2)}', primaryColor, PdfColors.green),
+          _summaryCard('Total Expenses', 'Rs ${expenses.toStringAsFixed(2)}', primaryColor, PdfColors.red),
+          _summaryCard('Net Remaining', 'Rs ${remaining.toStringAsFixed(2)}', primaryColor, accentColor),
+        ],
+      );
+
+  static pw.Widget _summaryCard(
+      String title, String value, PdfColor primaryColor, PdfColor valueColor) =>
+      pw.Expanded(
+        child: pw.Container(
+          margin: const pw.EdgeInsets.symmetric(horizontal: 5),
+          padding: const pw.EdgeInsets.all(15),
+          decoration: pw.BoxDecoration(color: PdfColors.white, borderRadius: pw.BorderRadius.circular(8)),
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.center,
+            children: [
+              pw.Text(title,
+                  style: pw.TextStyle(fontSize: 12, color: primaryColor, fontWeight: pw.FontWeight.bold)),
+              pw.SizedBox(height: 8),
+              pw.Text(value,
+                  style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold, color: valueColor)),
+            ],
+          ),
         ),
-        child: pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.center,
-          children: [
-            pw.Text(title, style: pw.TextStyle(fontSize: 12, color: primaryColor, fontWeight: pw.FontWeight.bold)),
-            pw.SizedBox(height: 8),
-            pw.Text(value, style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold, color: valueColor)),
-          ],
-        ),
-      ),
-    );
-  }
+      );
 
-  static pw.Widget _buildExpenseBreakdown(
-      List<dynamic>? breakdown, double totalExpenses, PdfColor textColor) {
+  static pw.Widget _expenseBreakdown(List<dynamic>? breakdown, double totalExpenses, PdfColor textColor) {
     if (breakdown == null || breakdown.isEmpty) {
       return pw.Text('No expenses recorded for breakdown.', style: pw.TextStyle(color: textColor));
     }
@@ -167,12 +172,12 @@ class PdfGenerator {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: breakdown.map((item) {
-        final amount = item['amount'] ?? 0;
-        final percentage = totalExpenses > 0 ? (amount / totalExpenses) * 100 : 0;
+        final amount = _toDouble(item['amount']);
+        final percent = totalExpenses > 0 ? (amount / totalExpenses) * 100 : 0;
         return pw.Padding(
           padding: const pw.EdgeInsets.symmetric(vertical: 4),
           child: pw.Text(
-            '${item['category']}: Rs ${amount.toStringAsFixed(2)} (${percentage.toStringAsFixed(1)}%)',
+            '${item['category']}: Rs ${amount.toStringAsFixed(2)} (${percent.toStringAsFixed(1)}%)',
             style: pw.TextStyle(fontSize: 11, color: textColor),
           ),
         );
@@ -180,19 +185,19 @@ class PdfGenerator {
     );
   }
 
-  static pw.Widget _buildTransactionsTable(
-      List<dynamic>? transactions, PdfColor primaryColor, PdfColor textColor, PdfColor borderColor) {
+  static pw.Widget _transactionsTable(List<dynamic>? transactions, PdfColor primaryColor, PdfColor textColor,
+      PdfColor borderColor) {
     if (transactions == null || transactions.isEmpty) {
       return pw.Text('No transactions recorded.', style: pw.TextStyle(color: textColor));
     }
 
     return pw.Table.fromTextArray(
       headers: ['Title', 'Amount', 'Date'],
-      data: transactions.map((txn) => [
-        txn["title"].toString(),
-        "Rs ${txn["amount"].toStringAsFixed(2)}",
-        txn["date"].toString().split(' ')[0],
-      ]).toList(),
+      data: transactions.map((txn) {
+        final amount = _toDouble(txn['amount']);
+        final date = txn['date'].toString().split(' ')[0];
+        return [txn['title'].toString(), "Rs ${amount.toStringAsFixed(2)}", date];
+      }).toList(),
       border: pw.TableBorder.all(color: borderColor, width: 1),
       headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white, fontSize: 10),
       headerDecoration: pw.BoxDecoration(color: primaryColor),
@@ -209,8 +214,8 @@ class PdfGenerator {
 
   static Future<pw.ImageProvider?> _loadLogo() async {
     try {
-      final logoData = await rootBundle.load('assets/images/logo.png');
-      return pw.MemoryImage(logoData.buffer.asUint8List());
+      final data = await rootBundle.load('assets/images/logo.png');
+      return pw.MemoryImage(data.buffer.asUint8List());
     } catch (e) {
       print('Error loading logo: $e');
       return null;

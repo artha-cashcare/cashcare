@@ -56,12 +56,10 @@ class RecommendationCard extends StatelessWidget {
                   children: [
                     const TextSpan(
                       text: 'Highest spending category ',
-                      // style: TextStyle(fontWeight: FontWeight.w600),
                     ),
                     TextSpan(
                       text: recommendation.highestSource,
                       style: const TextStyle(
-                        // fontWeight: FontWeight.bold,
                       ),
                     ),
                     const TextSpan(text: ' with ',style: TextStyle(fontSize: 15)),

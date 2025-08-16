@@ -10,7 +10,7 @@ import 'package:esewa_flutter_sdk/esewa_flutter_sdk.dart';
       try {
         EsewaFlutterSdk.initPayment(
           esewaConfig: EsewaConfig(
-            environment: Environment.test,  // or Environment.production
+            environment: Environment.test,
             clientId: "JB0BBQ4aD0UqIThFJwAKBgAXEUkEGQUBBAwdOgABHD4DChwUAB0R",
             secretId: "BhwIWQQADhIYSxILExMcAgFXFhcOBwAKBgAXEQ=="
 
@@ -19,7 +19,7 @@ import 'package:esewa_flutter_sdk/esewa_flutter_sdk.dart';
             productId: "1d71jd81",
             productName: "Premium 1",
             productPrice: "2000",
-            callbackUrl: 'https://yourdomain.com/callback',  // You can add your callback URL if needed
+            callbackUrl: 'https://yourdomain.com/callback',
           ),
           onPaymentSuccess: (EsewaPaymentSuccessResult result) async{
             debugPrint('Payment SUCCESS: ${result.productName}, ${result.totalAmount}');
@@ -38,7 +38,7 @@ import 'package:esewa_flutter_sdk/esewa_flutter_sdk.dart';
                 date: DateTime.now().toIso8601String(),
               );
             } catch (e) {
-              debugPrint("❌ Failed to send payment to server: $e");
+              debugPrint("Failed to send payment to server: $e");
             }
 
           },

@@ -81,7 +81,7 @@ class _LoginPageState extends State<LoginPage> {
     } catch (e) {
       if (!mounted) return;
 
-      String errorMessage = 'Login failed';
+      String errorMessage = 'Invaid email or password ';
       if (e.toString().contains('Invalid email or password')) {
         errorMessage = 'Invalid email or password';
       } else if (e.toString().contains('Network error')) {
@@ -106,21 +106,23 @@ class _LoginPageState extends State<LoginPage> {
     try {
       final result = await GoogleAuthService.signInWithGoogle();
       if (result && mounted) {
-        Navigator.pushReplacement(
+        Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => BottomNavbar()),
+              (route) => false,
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Google sign-in failed: ${e.toString()}')),
+          SnackBar(content: Text('Google signin failed: ${e.toString()}')),
         );
       }
     } finally {
       if (mounted) setState(() => _isGoogleLoading = false);
     }
   }
+
 
   Future<bool> _hasInternetConnection() async {
       try {

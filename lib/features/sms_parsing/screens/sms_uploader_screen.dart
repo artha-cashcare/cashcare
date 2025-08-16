@@ -8,11 +8,9 @@ import 'package:flutter/material.dart';
 import 'package:another_telephony/telephony.dart';
 import 'package:flutter_iconly/flutter_iconly.dart';
 
-import 'package:intl/intl.dart';
-
 @pragma('vm:entry-point')
 Future<void> backgroundSmsHandler(SmsMessage message) async {
-  debugPrint("📩 Background SMS: ${message.body}");
+  debugPrint("Background SMS: ${message.body}");
 }
 
 class SmsUploaderScreen extends StatefulWidget {
@@ -72,11 +70,11 @@ class _SmsUploaderScreenState extends State<SmsUploaderScreen> {
   Future<void> _handleSms(SmsMessage sms) async {
     final parsed = SmsParser.parseSms(sms.body ?? '');
     final amount = parsed['amount'] ?? '0';
-    final type = SmsParser.determineTransactionType(
-      parsed['type'] ?? 'unknown',
-    );
+    final type = SmsParser.determineTransactionType(parsed['type'] ?? 'unknown');
 
     if (type == 'unknown') return;
+
+    final smsId = '${sms.address?.toLowerCase() ?? ''}_${sms.date}';
 
     final category = await _showCategoryDialog(
       amount: amount,
@@ -84,7 +82,14 @@ class _SmsUploaderScreenState extends State<SmsUploaderScreen> {
       message: sms.body ?? '',
     );
 
-    if (category == null) return;
+    if (category == 'ignore_permanent') {
+      await _smsHandler.saveIgnoredId(smsId);
+      return;
+    }
+
+    if (category == null) {
+      return;
+    }
 
     final transaction = SmsTransaction(
       amount: double.parse(amount),
@@ -95,10 +100,11 @@ class _SmsUploaderScreenState extends State<SmsUploaderScreen> {
 
     final success = await _apiService.postTransaction(transaction);
     if (success) {
+      await _smsHandler.saveProcessedId(smsId);
       await _fetchTransactions();
-      setState(() => _status = '✅ Sent: Rs. $amount');
+      setState(() => _status = 'Sent: Rs. $amount');
     } else {
-      setState(() => _status = '❌ Failed to send SMS');
+      setState(() => _status = 'Failed to send SMS');
     }
   }
 
@@ -114,25 +120,24 @@ class _SmsUploaderScreenState extends State<SmsUploaderScreen> {
       barrierDismissible: false,
       builder: (ctx) {
         return AlertDialog(
-          title: const Text('📊 Categorize Transaction'),
+          title: const Text('Categorize Transaction'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text("💰 Amount: Rs. $amount"),
-              Text("📅 Date: ${TransactionUtils.formatDate(date)}"),
+              Text("Amount: Rs. $amount"),
+              Text("Date: ${TransactionUtils.formatDate(date)}"),
               const Divider(),
               const Text(
-                "✉️ Message:",
+                "Message:",
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               Text(message, style: const TextStyle(fontSize: 12)),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 decoration: const InputDecoration(labelText: 'Select Category'),
-                items:
-                    ['Food', 'Bills', 'Shopping', 'Salary', 'Other']
-                        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                        .toList(),
+                items: ['Food', 'Bills', 'Shopping', 'Salary', 'Other']
+                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                    .toList(),
                 onChanged: (val) => selectedCategory = val,
               ),
             ],
@@ -141,6 +146,11 @@ class _SmsUploaderScreenState extends State<SmsUploaderScreen> {
             TextButton(
               onPressed: () => Navigator.pop(ctx, null),
               child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, 'ignore_permanent'),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('IIgnore'),
             ),
             ElevatedButton(
               onPressed: () {
@@ -178,132 +188,122 @@ class _SmsUploaderScreenState extends State<SmsUploaderScreen> {
           ),
           const Divider(),
           Expanded(
-            child:
-                _isLoading
-                    ? const Center(child: FloatingDotLoading())
-                    : _transactions.isEmpty
-                    ? const Center(child: Text('No transactions yet'))
-                    : ListView.builder(
-                      itemCount: _transactions.length,
-                      itemBuilder: (ctx, index) {
-                        final transaction = _transactions[index];
-                        final isIncome = transaction.parsedType == 'income';
-                        final categoryInfo = TransactionUtils.getCategoryInfo(
-                          transaction.category,
-                          isIncome,
-                        );
+            child: _isLoading
+                ? const Center(child: FloatingDotLoading())
+                : _transactions.isEmpty
+                ? const Center(child: Text('No transactions yet'))
+                : ListView.builder(
+              itemCount: _transactions.length,
+              itemBuilder: (ctx, index) {
+                final transaction = _transactions[index];
+                final isIncome = transaction.parsedType == 'income';
+                final categoryInfo = TransactionUtils.getCategoryInfo(
+                  transaction.category,
+                  isIncome,
+                );
 
-                        return Container(
-                          margin: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
+                return Container(
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.grey.shade200),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 4,
+                        offset: const Offset(1, 2),
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.grey.shade200),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 4,
-                                offset: const Offset(1, 2),
+                            color: isIncome
+                                ? Colors.green.shade50
+                                : Colors.red.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            categoryInfo.icon,
+                            color: isIncome
+                                ? Colors.green.shade700
+                                : Colors.red.shade700,
+                            size: 26,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                transaction.category,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: 'Poppins',
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                TransactionUtils.getSubtitle(
+                                  transaction.parsedType,
+                                  isIncome,
+                                ),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey.shade600,
+                                ),
                               ),
                             ],
                           ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              TransactionUtils.formatAmount(
+                                transaction.amount,
+                                isIncome,
+                              ),
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: isIncome
+                                    ? Colors.green.shade800
+                                    : Colors.red.shade800,
+                                fontFamily: 'Poppins',
+                              ),
                             ),
-                            child: Row(
-                              children: [
-                                // Icon container
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color:
-                                        isIncome
-                                            ? Colors.green.shade50
-                                            : Colors.red.shade50,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Icon(
-                                    categoryInfo.icon,
-                                    color:
-                                        isIncome
-                                            ? Colors.green.shade700
-                                            : Colors.red.shade700,
-                                    size: 26,
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-
-                                // Texts
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        transaction.category,
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                          fontFamily: 'Poppins',
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        TransactionUtils.getSubtitle(
-                                          transaction.parsedType,
-                                          isIncome,
-                                        ),
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          color: Colors.grey.shade600,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-
-                                // Amount & date
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      TransactionUtils.formatAmount(
-                                        transaction.amount,
-                                        isIncome,
-                                      ),
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.bold,
-                                        color:
-                                            isIncome
-                                                ? Colors.green.shade800
-                                                : Colors.red.shade800,
-                                        fontFamily: 'Poppins',
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      TransactionUtils.formatDate(
-                                        transaction.timestamp,
-                                      ),
-                                      style: const TextStyle(
-                                        fontSize: 11,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
+                            const SizedBox(height: 4),
+                            Text(
+                              TransactionUtils.formatDate(
+                                transaction.timestamp,
+                              ),
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey,
+                              ),
                             ),
-                          ),
-                        );
-                      },
+                          ],
+                        ),
+                      ],
                     ),
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),

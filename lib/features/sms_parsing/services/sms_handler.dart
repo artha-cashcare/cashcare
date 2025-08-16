@@ -5,7 +5,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class SmsHandler {
   final Telephony telephony = Telephony.instance;
-   Set<String> _processedIds = {};
+  Set<String> _processedIds = {};
+  Set<String> _ignoredIds = {};
+
   final List<String> trustedBankSenders = [
     "nabil", "nic", "nibl", "global", "scb", "sanima", "ctzn", "alert", "1415"
   ];
@@ -23,33 +25,33 @@ class SmsHandler {
 
   Future<void> _requestPermission() async {
     final perm = await Permission.sms.request();
-    if (!perm.isGranted) {
-      throw Exception('SMS permission required!');
-    }
+    if (!perm.isGranted) throw Exception('SMS permission required!');
   }
 
   Future<void> _loadProcessed() async {
     final prefs = await SharedPreferences.getInstance();
     _processedIds = prefs.getStringList('processed_sms_ids')?.toSet() ?? {};
+    _ignoredIds = prefs.getStringList('ignored_sms_ids')?.toSet() ?? {};
   }
 
-  Future<void> _saveProcessedId(String id) async {
+  Future<void> saveProcessedId(String id) async {
     _processedIds.add(id);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList('processed_sms_ids', _processedIds.toList());
   }
 
-  Future<void> scanInbox(Function(SmsMessage) onValidSms) async {
-    final perm = await Permission.sms.isGranted;
-    if (!perm) return;
+  Future<void> saveIgnoredId(String id) async {
+    _ignoredIds.add(id);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('ignored_sms_ids', _ignoredIds.toList());
+  }
 
+  Future<void> scanInbox(Function(SmsMessage) onValidSms) async {
+    if (!await Permission.sms.isGranted) return;
     final inbox = await telephony.getInboxSms(
       columns: [SmsColumn.ADDRESS, SmsColumn.BODY, SmsColumn.DATE],
     );
-
-    for (var sms in inbox) {
-      await _processSms(sms, onValidSms);
-    }
+    for (var sms in inbox) await _processSms(sms, onValidSms);
   }
 
   Future<void> _processSms(SmsMessage sms, Function(SmsMessage) onValidSms) async {
@@ -57,7 +59,7 @@ class SmsHandler {
     final body = sms.body?.toLowerCase() ?? '';
     final id = '${addr}_${sms.date}';
 
-    if (_processedIds.contains(id)) return;
+    if (_processedIds.contains(id) || _ignoredIds.contains(id)) return;
 
     final isBank = trustedBankSenders.any(addr.contains);
     final isTxn = transactionKeywords.any(body.contains);
@@ -70,6 +72,5 @@ class SmsHandler {
     if (amount == '0' || amount == '0.00') return;
 
     onValidSms(sms);
-    await _saveProcessedId(id);
   }
 }

@@ -23,7 +23,6 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   HttpOverrides.global = MyHttpOverrides();
 
-  // Initialize and load profile data before app starts
   final profileProvider = ProfileProvider();
   await profileProvider.fetchProfile();
 

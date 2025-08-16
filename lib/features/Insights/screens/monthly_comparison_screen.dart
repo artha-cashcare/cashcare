@@ -23,7 +23,6 @@ class _MonthlyComparisonScreenState extends State<MonthlyComparisonScreen> {
   @override
   void initState() {
     super.initState();
-    // Replace with your actual token
     const token = 'your-auth-token';
     apiService = ApiService();
     _loadData();

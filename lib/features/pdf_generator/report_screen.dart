@@ -56,10 +56,10 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
     super.dispose();
   }
 
-  String getMonthParam() {
-    final index = months.indexOf(_selectedMonth) + 1;
-    return "$_selectedYear-${index.toString().padLeft(2, '0')}";
-  }
+    String getMonthParam() {
+      final index = months.indexOf(_selectedMonth) + 1;
+      return "$_selectedYear-${index.toString().padLeft(2, '0')}";
+    }
 
   Future<void> _generateReport() async {
     setState(() {

@@ -1,102 +1,102 @@
-import 'dart:async';
-import 'dart:convert';
-import 'package:cashcare/constant/api_constant.dart';
-import 'package:http/http.dart' as http;
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+  import 'dart:async';
+  import 'dart:convert';
+  import 'package:cashcare/constant/api_constant.dart';
+  import 'package:http/http.dart' as http;
+  import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-class AuthInterceptor {
-  static const FlutterSecureStorage _storage = FlutterSecureStorage();
-  static final baseUrl = ApiConstants.baseUrl;
+  class AuthInterceptor {
+    static const FlutterSecureStorage _storage = FlutterSecureStorage();
+    static final baseUrl = ApiConstants.baseUrl;
 
-  static Future<String?> getValidAccessToken() async {
-    String? accessToken = await _storage.read(key: 'access_token');
-    String? refreshToken = await _storage.read(key: 'refresh_token');
+    static Future<String?> getValidAccessToken() async {
+      String? accessToken = await _storage.read(key: 'access_token');
+      String? refreshToken = await _storage.read(key: 'refresh_token');
 
-    if (accessToken == null || refreshToken == null) return null;
+      if (accessToken == null || refreshToken == null) return null;
 
-    if (_isTokenExpired(accessToken)) {
-      try {
-        final newToken = await _refreshAccessToken(refreshToken);
-        if (newToken != null) {
-          return newToken;
-        } else {
+      if (_isTokenExpired(accessToken)) {
+        try {
+          final newToken = await _refreshAccessToken(refreshToken);
+          if (newToken != null) {
+            return newToken;
+          } else {
+            await logout();
+            return null;
+          }
+        } catch (e) {
           await logout();
           return null;
         }
-      } catch (e) {
-        await logout();
-        return null;
+      }
+
+      return accessToken;
+    }
+
+    static bool _isTokenExpired(String token) {
+      try {
+        final parts = token.split('.');
+        if (parts.length != 3) return true;
+
+        final payload = json.decode(
+          utf8.decode(base64Url.decode(base64Url.normalize(parts[1]))),
+        );
+        final exp = payload['exp'];
+        final currentTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+        return currentTime >= exp;
+      } catch (_) {
+        return true;
       }
     }
 
-    return accessToken;
-  }
-
-  static bool _isTokenExpired(String token) {
-    try {
-      final parts = token.split('.');
-      if (parts.length != 3) return true;
-
-      final payload = json.decode(
-        utf8.decode(base64Url.decode(base64Url.normalize(parts[1]))),
+    static Future<String?> _refreshAccessToken(String refreshToken) async {
+      final response = await http.post(
+        Uri.parse('$baseUrl/refresh/'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'refresh': refreshToken}),
       );
-      final exp = payload['exp'];
-      final currentTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-      return currentTime >= exp;
-    } catch (_) {
-      return true;
-    }
-  }
 
-  static Future<String?> _refreshAccessToken(String refreshToken) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/refresh/'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'refresh': refreshToken}),
-    );
+      if (response.statusCode == 200) {
+        final newData = jsonDecode(response.body);
+        final newAccessToken = newData['access'];
 
-    if (response.statusCode == 200) {
-      final newData = jsonDecode(response.body);
-      final newAccessToken = newData['access'];
-
-      if (newAccessToken != null) {
-        await _storage.write(key: 'access_token', value: newAccessToken);
-        return newAccessToken;
+        if (newAccessToken != null) {
+          await _storage.write(key: 'access_token', value: newAccessToken);
+          return newAccessToken;
+        }
       }
+
+      return null;
     }
 
-    return null;
-  }
-
-  static Future<void> logout() async {
-    await _storage.delete(key: 'access_token');
-    await _storage.delete(key: 'refresh_token');
-    await _storage.deleteAll();
-  }
-
-  static Future<http.Response> authorizedRequest(
-      Future<http.Response> Function(String accessToken) requestFunction,
-      ) async {
-    String? accessToken = await getValidAccessToken();
-
-    if (accessToken == null) {
-      await logout();
-      throw Exception('Authentication required');
+    static Future<void> logout() async {
+      await _storage.delete(key: 'access_token');
+      await _storage.delete(key: 'refresh_token');
+      await _storage.deleteAll();
     }
 
-    http.Response response = await requestFunction(accessToken);
-
-    if (response.statusCode == 401) {
-      accessToken = await getValidAccessToken();
+    static Future<http.Response> authorizedRequest(
+        Future<http.Response> Function(String accessToken) requestFunction,
+        ) async {
+      String? accessToken = await getValidAccessToken();
 
       if (accessToken == null) {
         await logout();
-        throw Exception('Session expired. Please log in again.');
+        throw Exception('Authentication required');
       }
 
-      response = await requestFunction(accessToken);
-    }
+      http.Response response = await requestFunction(accessToken);
 
-    return response;
+      if (response.statusCode == 401) {
+        accessToken = await getValidAccessToken();
+
+        if (accessToken == null) {
+          await logout();
+          throw Exception('Session expired. Please log in again.');
+        }
+
+        response = await requestFunction(accessToken);
+      }
+
+      return response;
+    }
   }
-}
